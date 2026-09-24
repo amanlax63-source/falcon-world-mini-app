@@ -3,7 +3,6 @@ import hmac
 import hashlib
 import json
 import sqlite3
-import base64
 from datetime import datetime, timezone, timedelta
 from urllib.parse import parse_qsl
 from typing import Optional
@@ -32,34 +31,34 @@ BOT_USERNAME = "FalconWorld_Bot"
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 DB_FILE = os.getenv("DB_FILE", "global_cash.db")
 
-# Admin Telegram IDs:
-# Render Environment Variable example:
-# ADMIN_IDS=123456789,987654321
 ADMIN_IDS = {
     int(x.strip())
     for x in os.getenv("ADMIN_IDS", "").split(",")
     if x.strip().isdigit()
 }
 
-# Required channels.
-# Example:
-# REQUIRED_CHANNELS=@ethiocashflow,@Sheger_tech1,@EthioVortex1
 REQUIRED_CHANNELS = [
     x.strip()
     for x in os.getenv("REQUIRED_CHANNELS", "").split(",")
     if x.strip()
 ]
 
+# ============================================================
+# FIXED BUSINESS VALUES
+# ============================================================
+
 REFERRAL_REWARD = 2.00
 DAILY_BONUS = 0.50
 MIN_WITHDRAWAL = 30.00
 
-MAX_PROOF_SIZE = 8 * 1024 * 1024  # 8 MB
+DAILY_BONUS_COOLDOWN_HOURS = 24
+
+MAX_PROOF_SIZE = 8 * 1024 * 1024
 
 
 app = FastAPI(
     title="Falcon World Mini App",
-    version="2.0.0",
+    version="2.1.0",
 )
 
 
@@ -73,7 +72,11 @@ def db():
         timeout=30,
         check_same_thread=False,
     )
+
     conn.row_factory = sqlite3.Row
+
+    conn.execute("PRAGMA foreign_keys = ON")
+
     return conn
 
 
@@ -83,16 +86,26 @@ def now_utc():
     )
 
 
-def ethiopia_date():
-    """
-    Ethiopia local date.
-    UTC+3.
-    """
-    et = datetime.now(timezone.utc) + timedelta(hours=3)
-    return et.strftime("%Y-%m-%d")
+def parse_utc(value):
+    if not value:
+        return None
 
+    try:
+        return datetime.strptime(
+            value,
+            "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
+
+    except ValueError:
+        return None
+
+
+# ============================================================
+# DATABASE INITIALIZATION
+# ============================================================
 
 def init_db():
+
     conn = db()
 
     conn.executescript(
@@ -100,13 +113,19 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
+
             username TEXT,
             first_name TEXT,
             last_name TEXT,
+
             balance REAL NOT NULL DEFAULT 0,
+
             referred_by INTEGER,
+
             referral_paid INTEGER NOT NULL DEFAULT 0,
+
             joined_all INTEGER NOT NULL DEFAULT 0,
+
             suspicious INTEGER NOT NULL DEFAULT 0,
 
             cbe_number TEXT,
@@ -119,6 +138,7 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS referrals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             referrer_id INTEGER NOT NULL,
             referred_id INTEGER NOT NULL UNIQUE,
 
@@ -302,21 +322,19 @@ def init_db():
         """
     )
 
-    # Default settings
-    defaults = {
-        "maintenance_mode": "0",
-    }
+    # --------------------------------------------------------
+    # DEFAULT SETTINGS
+    # --------------------------------------------------------
 
-    for key, value in defaults.items():
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO settings(key, value)
-            VALUES(?, ?)
-            """,
-            (key, value),
-        )
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO settings(key, value)
+        VALUES('maintenance_mode', '0')
+        """
+    )
 
     conn.commit()
+
     conn.close()
 
 
@@ -328,6 +346,7 @@ init_db()
 # ============================================================
 
 def get_setting(key, default=None):
+
     conn = db()
 
     row = conn.execute(
@@ -348,12 +367,14 @@ def get_setting(key, default=None):
 
 
 def set_setting(key, value):
+
     conn = db()
 
     conn.execute(
         """
         INSERT INTO settings(key, value)
         VALUES(?, ?)
+
         ON CONFLICT(key)
         DO UPDATE SET value=excluded.value
         """,
@@ -369,6 +390,7 @@ def set_setting(key, value):
 # ============================================================
 
 def validate_init_data(init_data: str):
+
     if not init_data:
         raise HTTPException(
             status_code=401,
@@ -423,16 +445,20 @@ def validate_init_data(init_data: str):
         )
 
     try:
+
         user = json.loads(
             data.get("user", "{}")
         )
+
     except json.JSONDecodeError:
+
         raise HTTPException(
             status_code=401,
             detail="Invalid Telegram user data.",
         )
 
     if not user.get("id"):
+
         raise HTTPException(
             status_code=401,
             detail="Telegram user ID is missing.",
@@ -444,13 +470,16 @@ def validate_init_data(init_data: str):
 def get_current_user(
     authorization: Optional[str],
 ):
+
     if not authorization:
+
         raise HTTPException(
             status_code=401,
             detail="Authorization required.",
         )
 
     if not authorization.startswith("tma "):
+
         raise HTTPException(
             status_code=401,
             detail="Invalid authorization format.",
@@ -466,11 +495,14 @@ def get_current_user(
 # ============================================================
 
 def ensure_user(user):
+
     user_id = int(user["id"])
 
     username = user.get("username")
     first_name = user.get("first_name", "")
     last_name = user.get("last_name", "")
+
+    current_time = now_utc()
 
     conn = db()
 
@@ -484,6 +516,7 @@ def ensure_user(user):
     ).fetchone()
 
     if not existing:
+
         conn.execute(
             """
             INSERT INTO users(
@@ -501,11 +534,13 @@ def ensure_user(user):
                 username,
                 first_name,
                 last_name,
-                now_utc(),
-                now_utc(),
+                current_time,
+                current_time,
             ),
         )
+
     else:
+
         conn.execute(
             """
             UPDATE users
@@ -519,7 +554,7 @@ def ensure_user(user):
                 username,
                 first_name,
                 last_name,
-                now_utc(),
+                current_time,
                 user_id,
             ),
         )
@@ -530,6 +565,10 @@ def ensure_user(user):
     return user_id
 
 
+# ============================================================
+# BALANCE HELPER
+# ============================================================
+
 def add_balance(
     conn,
     user_id,
@@ -538,6 +577,7 @@ def add_balance(
     description,
     reference_id=None,
 ):
+
     row = conn.execute(
         """
         SELECT balance
@@ -550,7 +590,10 @@ def add_balance(
     if not row:
         raise ValueError("User not found")
 
-    new_balance = float(row["balance"]) + float(amount)
+    new_balance = (
+        float(row["balance"])
+        + float(amount)
+    )
 
     conn.execute(
         """
@@ -593,12 +636,17 @@ def add_balance(
     return new_balance
 
 
+# ============================================================
+# NOTIFICATION
+# ============================================================
+
 def notify(
     conn,
     user_id,
     title,
     message,
 ):
+
     conn.execute(
         """
         INSERT INTO notifications(
@@ -618,10 +666,16 @@ def notify(
     )
 
 
+# ============================================================
+# ADMIN HELPERS
+# ============================================================
+
 def admin_required(user):
+
     user_id = int(user["id"])
 
     if user_id not in ADMIN_IDS:
+
         raise HTTPException(
             status_code=403,
             detail="Admin access required.",
@@ -638,6 +692,7 @@ def admin_log(
     target_id=None,
     details=None,
 ):
+
     conn.execute(
         """
         INSERT INTO admin_logs(
@@ -667,6 +722,7 @@ def admin_log(
 
 @app.get("/")
 async def home():
+
     return FileResponse("index.html")
 
 
@@ -676,6 +732,7 @@ async def home():
 
 @app.get("/health")
 async def health():
+
     return {
         "status": "ok",
         "app": APP_NAME,
@@ -685,18 +742,20 @@ async def health():
 
 
 # ============================================================
-# USER START / REGISTER
+# REGISTER
 # ============================================================
 
 @app.post("/api/register")
 async def register(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, init_data = get_current_user(authorization)
+
+    user, init_data = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
-    # Telegram Mini App start_param
     start_param = init_data.get(
         "start_param",
         "",
@@ -707,6 +766,7 @@ async def register(
         and start_param.isdigit()
         and int(start_param) != user_id
     ):
+
         referrer_id = int(start_param)
 
         conn = db()
@@ -734,6 +794,7 @@ async def register(
             and user_row["referred_by"] is None
             and referrer_exists
         ):
+
             conn.execute(
                 """
                 UPDATE users
@@ -784,7 +845,10 @@ async def register(
 async def get_me(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -802,6 +866,7 @@ async def get_me(
     conn.close()
 
     if not row:
+
         raise HTTPException(
             status_code=404,
             detail="User not found.",
@@ -817,18 +882,26 @@ async def get_me(
             "last_name": row["last_name"],
         },
 
-        "balance": float(row["balance"]),
+        "balance": float(
+            row["balance"]
+        ),
 
-        "joined_all": bool(row["joined_all"]),
+        "joined_all": bool(
+            row["joined_all"]
+        ),
 
-        "referral_count": get_referral_count(user_id),
+        "referral_count": get_referral_count(
+            user_id
+        ),
 
         "wallets": {
             "CBE": row["cbe_number"],
             "Telebirr": row["telebirr_number"],
         },
 
-        "suspicious": bool(row["suspicious"]),
+        "suspicious": bool(
+            row["suspicious"]
+        ),
 
         "daily_bonus": DAILY_BONUS,
 
@@ -836,18 +909,21 @@ async def get_me(
 
         "minimum_withdrawal": MIN_WITHDRAWAL,
 
-        "maintenance": get_setting(
-            "maintenance_mode",
-            "0",
-        ) == "1",
+        "maintenance": (
+            get_setting(
+                "maintenance_mode",
+                "0",
+            ) == "1"
+        ),
     }
 
 
 # ============================================================
-# REFERRAL
+# REFERRAL COUNT
 # ============================================================
 
 def get_referral_count(user_id):
+
     conn = db()
 
     row = conn.execute(
@@ -865,11 +941,18 @@ def get_referral_count(user_id):
     return int(row["c"])
 
 
+# ============================================================
+# REFERRAL
+# ============================================================
+
 @app.get("/api/referral")
 async def referral(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -902,7 +985,9 @@ async def referral(
     conn.close()
 
     return {
-        "count": get_referral_count(user_id),
+        "count": get_referral_count(
+            user_id
+        ),
 
         "reward": REFERRAL_REWARD,
 
@@ -922,9 +1007,11 @@ async def referral(
                 ),
                 "status": row["status"],
                 "reward": float(
-                    row["reward"]
+                    REFERRAL_REWARD
                 ),
-                "created_at": row["created_at"],
+                "created_at": row[
+                    "created_at"
+                ],
             }
             for row in rows
         ],
@@ -932,13 +1019,14 @@ async def referral(
 
 
 # ============================================================
-# VERIFY CHANNELS
+# TELEGRAM CHANNEL VERIFICATION
 # ============================================================
 
 async def telegram_member_status(
     channel,
     user_id,
 ):
+
     if not BOT_TOKEN:
         return False
 
@@ -948,9 +1036,11 @@ async def telegram_member_status(
     )
 
     try:
+
         async with httpx.AsyncClient(
             timeout=15
         ) as client:
+
             response = await client.get(
                 url,
                 params={
@@ -976,24 +1066,52 @@ async def telegram_member_status(
         return False
 
 
+# ============================================================
+# VERIFY CHANNELS
+# ============================================================
+
 @app.post("/api/verify")
 async def verify(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
     if not REQUIRED_CHANNELS:
+
+        conn = db()
+
+        conn.execute(
+            """
+            UPDATE users
+            SET joined_all=1,
+                updated_at=?
+            WHERE user_id=?
+            """,
+            (
+                now_utc(),
+                user_id,
+            ),
+        )
+
+        conn.commit()
+        conn.close()
+
         return {
             "success": True,
             "joined_all": True,
+            "channels": [],
             "message": "Verification completed.",
         }
 
     results = []
 
     for channel in REQUIRED_CHANNELS:
+
         joined = await telegram_member_status(
             channel,
             user_id,
@@ -1028,22 +1146,19 @@ async def verify(
     )
 
     # --------------------------------------------------------
-    # PAY REFERRAL ONLY AFTER FULL VERIFICATION
+    # PAY REFERRAL AFTER FULL VERIFICATION
     # --------------------------------------------------------
 
     if all_joined:
+
         referral_row = conn.execute(
             """
             SELECT
                 id,
                 referrer_id,
-                status,
-                reward
-
+                status
             FROM referrals
-
             WHERE referred_id=?
-
             LIMIT 1
             """,
             (user_id,),
@@ -1053,12 +1168,9 @@ async def verify(
             referral_row
             and referral_row["status"] != "paid"
         ):
-            referrer_id = referral_row[
-                "referrer_id"
-            ]
 
-            reward = float(
-                referral_row["reward"]
+            referrer_id = int(
+                referral_row["referrer_id"]
             )
 
             referrer_exists = conn.execute(
@@ -1071,6 +1183,10 @@ async def verify(
             ).fetchone()
 
             if referrer_exists:
+
+                # ALWAYS fixed 2 ETB.
+                reward = REFERRAL_REWARD
+
                 add_balance(
                     conn,
                     referrer_id,
@@ -1084,10 +1200,13 @@ async def verify(
                     """
                     UPDATE referrals
                     SET status='paid',
+                        reward=?,
                         paid_at=?
                     WHERE id=?
+                    AND status!='paid'
                     """,
                     (
+                        reward,
                         now_utc(),
                         referral_row["id"],
                     ),
@@ -1119,130 +1238,296 @@ async def verify(
 # ============================================================
 
 @app.post("/api/daily-bonus")
-async def daily_bonus(
+async def claim_daily_bonus(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT joined_all
-        FROM users
-        WHERE user_id=?
-        """,
-        (user_id,),
-    ).fetchone()
+    try:
 
-    if not row["joined_all"]:
-        conn.close()
+        # ----------------------------------------------------
+        # ATOMIC LOCK
+        # ----------------------------------------------------
 
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Please complete channel "
-                "verification first."
-            ),
+        conn.execute("BEGIN IMMEDIATE")
+
+        user_row = conn.execute(
+            """
+            SELECT
+                balance,
+                joined_all
+            FROM users
+            WHERE user_id=?
+            """,
+            (user_id,),
+        ).fetchone()
+
+        if not user_row:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
+
+        if not user_row["joined_all"]:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Please complete channel "
+                    "verification first."
+                ),
+            )
+
+        # ----------------------------------------------------
+        # CHECK LAST CLAIM
+        # ----------------------------------------------------
+
+        last_claim = conn.execute(
+            """
+            SELECT
+                created_at
+            FROM daily_bonus
+            WHERE user_id=?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (user_id,),
+        ).fetchone()
+
+        if last_claim:
+
+            last_time = parse_utc(
+                last_claim["created_at"]
+            )
+
+            if last_time:
+
+                current_time = datetime.now(
+                    timezone.utc
+                )
+
+                next_claim = (
+                    last_time
+                    + timedelta(
+                        hours=DAILY_BONUS_COOLDOWN_HOURS
+                    )
+                )
+
+                if current_time < next_claim:
+
+                    remaining = (
+                        next_claim
+                        - current_time
+                    )
+
+                    total_seconds = int(
+                        remaining.total_seconds()
+                    )
+
+                    hours = total_seconds // 3600
+
+                    minutes = (
+                        total_seconds % 3600
+                    ) // 60
+
+                    conn.rollback()
+
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            f"Daily Bonus already "
+                            f"claimed. Try again in "
+                            f"{hours}h {minutes}m."
+                        ),
+                    )
+
+        # ----------------------------------------------------
+        # CREATE UNIQUE DAILY CLAIM RECORD
+        # ----------------------------------------------------
+
+        claim_time = now_utc()
+
+        ethiopia_now = (
+            datetime.now(timezone.utc)
+            + timedelta(hours=3)
         )
 
-    today = ethiopia_date()
-
-    existing = conn.execute(
-        """
-        SELECT id
-        FROM daily_bonus
-        WHERE user_id=?
-        AND bonus_date=?
-        """,
-        (
-            user_id,
-            today,
-        ),
-    ).fetchone()
-
-    if existing:
-        conn.close()
-
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Daily Bonus has already "
-                "been claimed today."
-            ),
+        bonus_date = ethiopia_now.strftime(
+            "%Y-%m-%d"
         )
 
-    conn.execute(
-        """
-        INSERT INTO daily_bonus(
+        try:
+
+            conn.execute(
+                """
+                INSERT INTO daily_bonus(
+                    user_id,
+                    bonus_date,
+                    amount,
+                    created_at
+                )
+                VALUES(?,?,?,?)
+                """,
+                (
+                    user_id,
+                    bonus_date,
+                    DAILY_BONUS,
+                    claim_time,
+                ),
+            )
+
+        except sqlite3.IntegrityError:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Daily Bonus has already "
+                    "been claimed."
+                ),
+            )
+
+        # ----------------------------------------------------
+        # ADD 0.50 ETB
+        # ----------------------------------------------------
+
+        new_balance = add_balance(
+            conn,
             user_id,
-            bonus_date,
-            amount,
-            created_at
-        )
-        VALUES(?,?,?,?)
-        """,
-        (
-            user_id,
-            today,
             DAILY_BONUS,
-            now_utc(),
-        ),
-    )
+            "daily_bonus",
+            "Daily Bonus",
+            None,
+        )
 
-    new_balance = add_balance(
-        conn,
-        user_id,
-        DAILY_BONUS,
-        "daily_bonus",
-        "Daily Bonus",
-        None,
-    )
+        notify(
+            conn,
+            user_id,
+            "🎁 Daily Bonus",
+            (
+                f"{DAILY_BONUS:.2f} ETB "
+                "has been added to your balance."
+            ),
+        )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
-    return {
-        "success": True,
-        "amount": DAILY_BONUS,
-        "balance": new_balance,
-        "date": today,
-    }
+        return {
+            "success": True,
+            "amount": DAILY_BONUS,
+            "balance": new_balance,
+            "date": bonus_date,
+            "cooldown_hours": 24,
+        }
 
+    except HTTPException:
+        raise
+
+    except Exception:
+
+        conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Daily Bonus could not be processed.",
+        )
+
+    finally:
+
+        conn.close()
+
+
+# ============================================================
+# DAILY BONUS STATUS
+# ============================================================
 
 @app.get("/api/daily-bonus")
 async def daily_bonus_status(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
-
-    today = ethiopia_date()
 
     conn = db()
 
     row = conn.execute(
         """
-        SELECT id
+        SELECT
+            created_at
         FROM daily_bonus
         WHERE user_id=?
-        AND bonus_date=?
+        ORDER BY id DESC
+        LIMIT 1
         """,
-        (
-            user_id,
-            today,
-        ),
+        (user_id,),
     ).fetchone()
 
     conn.close()
 
+    claimed = False
+    next_claim_at = None
+    remaining_seconds = 0
+
+    if row:
+
+        last_claim = parse_utc(
+            row["created_at"]
+        )
+
+        if last_claim:
+
+            current_time = datetime.now(
+                timezone.utc
+            )
+
+            next_claim = (
+                last_claim
+                + timedelta(hours=24)
+            )
+
+            if current_time < next_claim:
+
+                claimed = True
+
+                next_claim_at = (
+                    next_claim.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                )
+
+                remaining_seconds = max(
+                    0,
+                    int(
+                        (
+                            next_claim
+                            - current_time
+                        ).total_seconds()
+                    ),
+                )
+
     return {
         "amount": DAILY_BONUS,
-        "date": today,
-        "claimed": bool(row),
+        "claimed": claimed,
+        "next_claim_at": next_claim_at,
+        "remaining_seconds": remaining_seconds,
+        "cooldown_hours": 24,
     }
 
 
@@ -1251,6 +1536,7 @@ async def daily_bonus_status(
 # ============================================================
 
 class WalletRequest(BaseModel):
+
     wallet_type: str
     wallet_number: str
 
@@ -1259,7 +1545,10 @@ class WalletRequest(BaseModel):
 async def wallet(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -1289,7 +1578,10 @@ async def save_wallet(
     request: WalletRequest,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -1300,21 +1592,20 @@ async def save_wallet(
         "CBE",
         "Telebirr",
     ):
+
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Wallet must be "
-                "CBE or Telebirr."
-            ),
+            detail="Wallet must be CBE or Telebirr.",
         )
 
     # --------------------------------------------------------
-    # CBE
+    # CBE VALIDATION
     # --------------------------------------------------------
 
     if wallet_type == "CBE":
 
         if not wallet_number.isdigit():
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1324,6 +1615,7 @@ async def save_wallet(
             )
 
         if len(wallet_number) != 13:
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1333,6 +1625,7 @@ async def save_wallet(
             )
 
         if not wallet_number.startswith("1000"):
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1342,12 +1635,13 @@ async def save_wallet(
             )
 
     # --------------------------------------------------------
-    # TELEBIRR
+    # TELEBIRR VALIDATION
     # --------------------------------------------------------
 
     if wallet_type == "Telebirr":
 
         if not wallet_number.isdigit():
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1357,6 +1651,7 @@ async def save_wallet(
             )
 
         if len(wallet_number) != 10:
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1366,6 +1661,7 @@ async def save_wallet(
             )
 
         if not wallet_number.startswith("09"):
+
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -1376,8 +1672,12 @@ async def save_wallet(
 
     conn = db()
 
-    # Check duplicate wallet across accounts.
+    # --------------------------------------------------------
+    # DUPLICATE WALLET CHECK
+    # --------------------------------------------------------
+
     if wallet_type == "CBE":
+
         duplicate = conn.execute(
             """
             SELECT user_id
@@ -1392,6 +1692,7 @@ async def save_wallet(
         ).fetchone()
 
     else:
+
         duplicate = conn.execute(
             """
             SELECT user_id
@@ -1406,6 +1707,7 @@ async def save_wallet(
         ).fetchone()
 
     if duplicate:
+
         conn.execute(
             """
             UPDATE users
@@ -1430,7 +1732,12 @@ async def save_wallet(
             ),
         )
 
+    # --------------------------------------------------------
+    # SAVE WALLET
+    # --------------------------------------------------------
+
     if wallet_type == "CBE":
+
         conn.execute(
             """
             UPDATE users
@@ -1446,6 +1753,7 @@ async def save_wallet(
         )
 
     else:
+
         conn.execute(
             """
             UPDATE users
@@ -1475,8 +1783,15 @@ async def save_wallet(
 # ============================================================
 
 class WithdrawRequest(BaseModel):
+
     amount: float
-    wallet_type: str
+
+    # Optional:
+    # If user has both wallets, frontend can send
+    # CBE or Telebirr.
+    #
+    # If only one wallet exists, backend auto-selects it.
+    wallet_type: Optional[str] = None
 
 
 @app.post("/api/withdraw")
@@ -1484,15 +1799,17 @@ async def withdraw(
     request: WithdrawRequest,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
     amount = float(request.amount)
 
-    wallet_type = request.wallet_type.strip()
-
     if amount < MIN_WITHDRAWAL:
+
         raise HTTPException(
             status_code=400,
             detail=(
@@ -1501,10 +1818,18 @@ async def withdraw(
             ),
         )
 
-    if wallet_type not in (
+    requested_wallet = (
+        request.wallet_type.strip()
+        if request.wallet_type
+        else None
+    )
+
+    if requested_wallet not in (
+        None,
         "CBE",
         "Telebirr",
     ):
+
         raise HTTPException(
             status_code=400,
             detail="Invalid wallet type.",
@@ -1512,180 +1837,264 @@ async def withdraw(
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT
-            balance,
-            cbe_number,
-            telebirr_number,
-            suspicious,
-            joined_all
-        FROM users
-        WHERE user_id=?
-        """,
-        (user_id,),
-    ).fetchone()
+    try:
 
-    if not row:
-        conn.close()
+        conn.execute("BEGIN IMMEDIATE")
 
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
-        )
+        row = conn.execute(
+            """
+            SELECT
+                balance,
+                cbe_number,
+                telebirr_number,
+                suspicious,
+                joined_all
+            FROM users
+            WHERE user_id=?
+            """,
+            (user_id,),
+        ).fetchone()
 
-    if row["suspicious"]:
-        conn.close()
+        if not row:
 
-        raise HTTPException(
-            status_code=403,
-            detail="Account is under review.",
-        )
+            conn.rollback()
 
-    if not row["joined_all"]:
-        conn.close()
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
 
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Please complete channel "
-                "verification first."
+        if row["suspicious"]:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=403,
+                detail="Account is under review.",
+            )
+
+        if not row["joined_all"]:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Please complete channel "
+                    "verification first."
+                ),
+            )
+
+        cbe = row["cbe_number"]
+        telebirr = row["telebirr_number"]
+
+        # ----------------------------------------------------
+        # SELECT WALLET
+        # ----------------------------------------------------
+
+        if requested_wallet == "CBE":
+
+            if not cbe:
+
+                conn.rollback()
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Please add your CBE wallet first."
+                    ),
+                )
+
+            wallet_type = "CBE"
+            wallet_number = cbe
+
+        elif requested_wallet == "Telebirr":
+
+            if not telebirr:
+
+                conn.rollback()
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Please add your Telebirr wallet first."
+                    ),
+                )
+
+            wallet_type = "Telebirr"
+            wallet_number = telebirr
+
+        else:
+
+            if cbe and not telebirr:
+
+                wallet_type = "CBE"
+                wallet_number = cbe
+
+            elif telebirr and not cbe:
+
+                wallet_type = "Telebirr"
+                wallet_number = telebirr
+
+            elif cbe and telebirr:
+
+                conn.rollback()
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Please select CBE or "
+                        "Telebirr for this withdrawal."
+                    ),
+                )
+
+            else:
+
+                conn.rollback()
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Please add a wallet first."
+                    ),
+                )
+
+        balance = float(row["balance"])
+
+        if amount > balance:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail="Insufficient balance.",
+            )
+
+        # ----------------------------------------------------
+        # DEDUCT BALANCE ATOMICALLY
+        # ----------------------------------------------------
+
+        conn.execute(
+            """
+            UPDATE users
+            SET balance=balance-?,
+                updated_at=?
+            WHERE user_id=?
+            AND balance>=?
+            """,
+            (
+                amount,
+                now_utc(),
+                user_id,
+                amount,
             ),
         )
 
-    if wallet_type == "CBE":
-        wallet_number = row["cbe_number"]
-    else:
-        wallet_number = row["telebirr_number"]
+        changed = conn.execute(
+            "SELECT changes() AS c"
+        ).fetchone()["c"]
 
-    if not wallet_number:
-        conn.close()
+        if changed != 1:
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Please add your "
-                f"{wallet_type} wallet first."
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Withdrawal could not "
+                    "be processed."
+                ),
+            )
+
+        new_balance = balance - amount
+
+        cur = conn.execute(
+            """
+            INSERT INTO withdrawals(
+                user_id,
+                amount,
+                wallet_type,
+                wallet_number,
+                status,
+                created_at
+            )
+            VALUES(?,?,?,?,?,?)
+            """,
+            (
+                user_id,
+                amount,
+                wallet_type,
+                wallet_number,
+                "pending",
+                now_utc(),
             ),
         )
 
-    balance = float(row["balance"])
+        withdrawal_id = cur.lastrowid
 
-    if amount > balance:
-        conn.close()
-
-        raise HTTPException(
-            status_code=400,
-            detail="Insufficient balance.",
+        conn.execute(
+            """
+            INSERT INTO balance_history(
+                user_id,
+                amount,
+                type,
+                description,
+                reference_id,
+                balance_after,
+                created_at
+            )
+            VALUES(?,?,?,?,?,?,?)
+            """,
+            (
+                user_id,
+                -amount,
+                "withdrawal",
+                "Withdrawal request",
+                withdrawal_id,
+                new_balance,
+                now_utc(),
+            ),
         )
 
-    # --------------------------------------------------------
-    # DEDUCT BALANCE
-    # --------------------------------------------------------
-
-    conn.execute(
-        """
-        UPDATE users
-        SET balance=balance-?,
-            updated_at=?
-        WHERE user_id=?
-        AND balance>=?
-        """,
-        (
-            amount,
-            now_utc(),
+        notify(
+            conn,
             user_id,
-            amount,
-        ),
-    )
+            "💸 Withdrawal Submitted",
+            (
+                f"Your withdrawal of "
+                f"{amount:.2f} ETB is pending review."
+            ),
+        )
 
-    changed = conn.execute(
-        "SELECT changes() AS c"
-    ).fetchone()["c"]
+        conn.commit()
 
-    if changed != 1:
+        return {
+            "success": True,
+            "withdrawal_id": withdrawal_id,
+            "amount": amount,
+            "wallet_type": wallet_type,
+            "wallet_number": wallet_number,
+            "status": "pending",
+            "balance": new_balance,
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception:
+
         conn.rollback()
-        conn.close()
 
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail=(
-                "Withdrawal could not "
-                "be processed."
+                "Withdrawal could not be processed."
             ),
         )
 
-    new_balance = balance - amount
+    finally:
 
-    cur = conn.execute(
-        """
-        INSERT INTO withdrawals(
-            user_id,
-            amount,
-            wallet_type,
-            wallet_number,
-            status,
-            created_at
-        )
-        VALUES(?,?,?,?,?,?)
-        """,
-        (
-            user_id,
-            amount,
-            wallet_type,
-            wallet_number,
-            "pending",
-            now_utc(),
-        ),
-    )
-
-    withdrawal_id = cur.lastrowid
-
-    conn.execute(
-        """
-        INSERT INTO balance_history(
-            user_id,
-            amount,
-            type,
-            description,
-            reference_id,
-            balance_after,
-            created_at
-        )
-        VALUES(?,?,?,?,?,?,?)
-        """,
-        (
-            user_id,
-            -amount,
-            "withdrawal",
-            "Withdrawal request",
-            withdrawal_id,
-            new_balance,
-            now_utc(),
-        ),
-    )
-
-    notify(
-        conn,
-        user_id,
-        "💸 Withdrawal Submitted",
-        (
-            f"Your withdrawal of "
-            f"{amount:.2f} ETB is pending review."
-        ),
-    )
-
-    conn.commit()
-    conn.close()
-
-    return {
-        "success": True,
-        "withdrawal_id": withdrawal_id,
-        "amount": amount,
-        "wallet_type": wallet_type,
-        "status": "pending",
-        "balance": new_balance,
-    }
+        conn.close()
 
 
 # ============================================================
@@ -1696,7 +2105,10 @@ async def withdraw(
 async def withdrawals(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -1727,12 +2139,22 @@ async def withdrawals(
         "withdrawals": [
             {
                 "id": row["id"],
-                "amount": float(row["amount"]),
-                "wallet_type": row["wallet_type"],
-                "wallet_number": row["wallet_number"],
+                "amount": float(
+                    row["amount"]
+                ),
+                "wallet_type": row[
+                    "wallet_type"
+                ],
+                "wallet_number": row[
+                    "wallet_number"
+                ],
                 "status": row["status"],
-                "created_at": row["created_at"],
-                "reviewed_at": row["reviewed_at"],
+                "created_at": row[
+                    "created_at"
+                ],
+                "reviewed_at": row[
+                    "reviewed_at"
+                ],
                 "rejection_reason": row[
                     "rejection_reason"
                 ],
@@ -1750,7 +2172,10 @@ async def withdrawals(
 async def tasks(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -1801,8 +2226,12 @@ async def tasks(
                 "channel_username": row[
                     "channel_username"
                 ],
-                "channel_url": row["channel_url"],
-                "reward": float(row["reward"]),
+                "channel_url": row[
+                    "channel_url"
+                ],
+                "reward": float(
+                    row["reward"]
+                ),
                 "status": row["status"],
                 "paid": bool(row["paid"]),
             }
@@ -1810,6 +2239,19 @@ async def tasks(
         ],
 
         "coming_soon": len(rows) == 0,
+
+        "coming_soon_title": (
+            "🚀 Coming Soon"
+            if len(rows) == 0
+            else None
+        ),
+
+        "coming_soon_message": (
+            "New tasks will be available soon. "
+            "Stay tuned!"
+            if len(rows) == 0
+            else None
+        ),
     }
 
 
@@ -1824,7 +2266,10 @@ async def submit_task(
     proof: Optional[UploadFile] = File(default=None),
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -1843,6 +2288,7 @@ async def submit_task(
     ).fetchone()
 
     if not task:
+
         conn.close()
 
         raise HTTPException(
@@ -1851,6 +2297,7 @@ async def submit_task(
         )
 
     if not task["active"]:
+
         conn.close()
 
         raise HTTPException(
@@ -1875,7 +2322,9 @@ async def submit_task(
     ).fetchone()
 
     if existing:
+
         if existing["paid"]:
+
             conn.close()
 
             raise HTTPException(
@@ -1887,6 +2336,7 @@ async def submit_task(
             )
 
         if existing["status"] == "pending":
+
             conn.close()
 
             raise HTTPException(
@@ -1902,9 +2352,11 @@ async def submit_task(
     proof_content_type = None
 
     if proof:
+
         proof_data = await proof.read()
 
         if len(proof_data) > MAX_PROOF_SIZE:
+
             conn.close()
 
             raise HTTPException(
@@ -1916,25 +2368,28 @@ async def submit_task(
             )
 
         proof_filename = proof.filename
+
         proof_content_type = (
             proof.content_type
             or "application/octet-stream"
         )
 
-        # Only image proof.
         if not proof_content_type.startswith(
             "image/"
         ):
+
             conn.close()
 
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    "Proof must be an image."
-                ),
+                detail="Proof must be an image.",
             )
 
-    if not proof_data and not proof_text.strip():
+    if (
+        not proof_data
+        and not proof_text.strip()
+    ):
+
         conn.close()
 
         raise HTTPException(
@@ -1946,6 +2401,7 @@ async def submit_task(
         )
 
     if existing:
+
         conn.execute(
             """
             UPDATE user_tasks
@@ -1970,6 +2426,7 @@ async def submit_task(
         )
 
     else:
+
         conn.execute(
             """
             INSERT INTO user_tasks(
@@ -2019,7 +2476,10 @@ async def submit_task(
 async def my_task_submissions(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -2037,6 +2497,7 @@ async def my_task_submissions(
             ut.reviewed_at,
             ut.rejection_reason,
             ut.paid
+
         FROM user_tasks ut
 
         JOIN tasks t
@@ -2059,7 +2520,9 @@ async def my_task_submissions(
                 "task_id": row["task_id"],
                 "title": row["title"],
                 "status": row["status"],
-                "reward": float(row["reward"]),
+                "reward": float(
+                    row["reward"]
+                ),
                 "submitted_at": row[
                     "submitted_at"
                 ],
@@ -2084,7 +2547,10 @@ async def my_task_submissions(
 async def balance_history(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -2100,9 +2566,13 @@ async def balance_history(
             reference_id,
             balance_after,
             created_at
+
         FROM balance_history
+
         WHERE user_id=?
+
         ORDER BY id DESC
+
         LIMIT 100
         """,
         (user_id,),
@@ -2114,16 +2584,22 @@ async def balance_history(
         "history": [
             {
                 "id": row["id"],
-                "amount": float(row["amount"]),
+                "amount": float(
+                    row["amount"]
+                ),
                 "type": row["type"],
-                "description": row["description"],
+                "description": row[
+                    "description"
+                ],
                 "reference_id": row[
                     "reference_id"
                 ],
                 "balance_after": float(
                     row["balance_after"]
                 ),
-                "created_at": row["created_at"],
+                "created_at": row[
+                    "created_at"
+                ],
             }
             for row in rows
         ]
@@ -2138,7 +2614,10 @@ async def balance_history(
 async def notifications(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -2152,9 +2631,13 @@ async def notifications(
             message,
             is_read,
             created_at
+
         FROM notifications
+
         WHERE user_id=?
+
         ORDER BY id DESC
+
         LIMIT 50
         """,
         (user_id,),
@@ -2171,7 +2654,9 @@ async def notifications(
                 "is_read": bool(
                     row["is_read"]
                 ),
-                "created_at": row["created_at"],
+                "created_at": row[
+                    "created_at"
+                ],
             }
             for row in rows
         ]
@@ -2182,7 +2667,10 @@ async def notifications(
 async def mark_notifications_read(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     user_id = ensure_user(user)
 
@@ -2213,7 +2701,10 @@ async def mark_notifications_read(
 async def announcements(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     ensure_user(user)
 
@@ -2226,9 +2717,13 @@ async def announcements(
             title,
             message,
             created_at
+
         FROM announcements
+
         WHERE active=1
+
         ORDER BY id DESC
+
         LIMIT 20
         """
     ).fetchall()
@@ -2258,7 +2753,10 @@ async def announcements(
 async def admin_me(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
@@ -2276,7 +2774,10 @@ async def admin_me(
 async def admin_dashboard(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
@@ -2336,7 +2837,9 @@ async def admin_dashboard(
             SUM(amount),
             0
         ) AS total
+
         FROM withdrawals
+
         WHERE status='paid'
         """
     ).fetchone()["total"]
@@ -2347,6 +2850,7 @@ async def admin_dashboard(
             SUM(balance),
             0
         ) AS total
+
         FROM users
         """
     ).fetchone()["total"]
@@ -2417,7 +2921,10 @@ async def admin_dashboard(
 async def admin_withdrawals(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -2466,7 +2973,9 @@ async def admin_withdrawals(
                 "username": row["username"],
                 "first_name": row["first_name"],
                 "last_name": row["last_name"],
-                "amount": float(row["amount"]),
+                "amount": float(
+                    row["amount"]
+                ),
                 "wallet_type": row[
                     "wallet_type"
                 ],
@@ -2490,8 +2999,13 @@ async def admin_withdrawals(
 
 
 class WithdrawalDecision(BaseModel):
+
     reason: str = ""
 
+
+# ============================================================
+# ADMIN APPROVE WITHDRAWAL
+# ============================================================
 
 @app.post(
     "/api/admin/withdrawals/{withdrawal_id}/approve"
@@ -2500,7 +3014,10 @@ async def approve_withdrawal(
     withdrawal_id: int,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
@@ -2512,13 +3029,16 @@ async def approve_withdrawal(
             user_id,
             amount,
             status
+
         FROM withdrawals
+
         WHERE id=?
         """,
         (withdrawal_id,),
     ).fetchone()
 
     if not row:
+
         conn.close()
 
         raise HTTPException(
@@ -2527,6 +3047,7 @@ async def approve_withdrawal(
         )
 
     if row["status"] != "pending":
+
         conn.close()
 
         raise HTTPException(
@@ -2579,6 +3100,10 @@ async def approve_withdrawal(
     }
 
 
+# ============================================================
+# ADMIN REJECT WITHDRAWAL
+# ============================================================
+
 @app.post(
     "/api/admin/withdrawals/{withdrawal_id}/reject"
 )
@@ -2587,113 +3112,141 @@ async def reject_withdrawal(
     request: WithdrawalDecision,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT
-            user_id,
-            amount,
-            status
-        FROM withdrawals
-        WHERE id=?
-        """,
-        (withdrawal_id,),
-    ).fetchone()
+    try:
 
-    if not row:
-        conn.close()
+        conn.execute("BEGIN IMMEDIATE")
 
-        raise HTTPException(
-            status_code=404,
-            detail="Withdrawal not found.",
+        row = conn.execute(
+            """
+            SELECT
+                user_id,
+                amount,
+                status
+
+            FROM withdrawals
+
+            WHERE id=?
+            """,
+            (withdrawal_id,),
+        ).fetchone()
+
+        if not row:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=404,
+                detail="Withdrawal not found.",
+            )
+
+        if row["status"] != "pending":
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "This withdrawal has "
+                    "already been reviewed."
+                ),
+            )
+
+        amount = float(
+            row["amount"]
         )
 
-    if row["status"] != "pending":
-        conn.close()
+        new_balance = add_balance(
+            conn,
+            row["user_id"],
+            amount,
+            "withdrawal_refund",
+            "Rejected withdrawal refund",
+            withdrawal_id,
+        )
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This withdrawal has "
-                "already been reviewed."
+        conn.execute(
+            """
+            UPDATE withdrawals
+            SET status='rejected',
+                reviewed_at=?,
+                rejection_reason=?
+            WHERE id=?
+            AND status='pending'
+            """,
+            (
+                now_utc(),
+                request.reason.strip(),
+                withdrawal_id,
             ),
         )
 
-    amount = float(row["amount"])
+        notify(
+            conn,
+            row["user_id"],
+            "❌ Withdrawal Rejected",
+            (
+                f"Your withdrawal of "
+                f"{amount:.2f} ETB was rejected. "
+                f"The amount has been returned "
+                f"to your balance."
+            ),
+        )
 
-    # --------------------------------------------------------
-    # REFUND AUTOMATICALLY
-    # --------------------------------------------------------
-
-    new_balance = add_balance(
-        conn,
-        row["user_id"],
-        amount,
-        "withdrawal_refund",
-        "Rejected withdrawal refund",
-        withdrawal_id,
-    )
-
-    conn.execute(
-        """
-        UPDATE withdrawals
-        SET status='rejected',
-            reviewed_at=?,
-            rejection_reason=?
-        WHERE id=?
-        """,
-        (
-            now_utc(),
-            request.reason.strip(),
+        admin_log(
+            conn,
+            admin_id,
+            "reject_withdrawal",
+            "withdrawal",
             withdrawal_id,
-        ),
-    )
+            (
+                f"Refund={amount}; "
+                f"Reason={request.reason}"
+            ),
+        )
 
-    notify(
-        conn,
-        row["user_id"],
-        "❌ Withdrawal Rejected",
-        (
-            f"Your withdrawal of "
-            f"{amount:.2f} ETB was rejected. "
-            f"The amount has been returned "
-            f"to your balance."
-        ),
-    )
+        conn.commit()
 
-    admin_log(
-        conn,
-        admin_id,
-        "reject_withdrawal",
-        "withdrawal",
-        withdrawal_id,
-        (
-            f"Refund={amount}; "
-            f"Reason={request.reason}"
-        ),
-    )
+        return {
+            "success": True,
+            "status": "rejected",
+            "refunded": amount,
+            "balance": new_balance,
+        }
 
-    conn.commit()
-    conn.close()
+    except HTTPException:
+        raise
 
-    return {
-        "success": True,
-        "status": "rejected",
-        "refunded": amount,
-        "balance": new_balance,
-    }
+    except Exception:
+
+        conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Withdrawal rejection failed."
+            ),
+        )
+
+    finally:
+
+        conn.close()
 
 
 # ============================================================
-# ADMIN TASKS
+# ADMIN TASK CREATE
 # ============================================================
 
 class TaskCreateRequest(BaseModel):
+
     title: str
     description: str = ""
     channel_username: str = ""
@@ -2706,14 +3259,25 @@ async def create_task(
     request: TaskCreateRequest,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
     if request.reward <= 0:
+
         raise HTTPException(
             status_code=400,
             detail="Reward must be greater than 0.",
+        )
+
+    if not request.title.strip():
+
+        raise HTTPException(
+            status_code=400,
+            detail="Task title is required.",
         )
 
     conn = db()
@@ -2764,11 +3328,18 @@ async def create_task(
     }
 
 
+# ============================================================
+# ADMIN TASKS
+# ============================================================
+
 @app.get("/api/admin/tasks")
 async def admin_tasks(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -2785,7 +3356,9 @@ async def admin_tasks(
             reward,
             active,
             created_at
+
         FROM tasks
+
         ORDER BY id DESC
         """
     ).fetchall()
@@ -2804,8 +3377,12 @@ async def admin_tasks(
                 "channel_url": row[
                     "channel_url"
                 ],
-                "reward": float(row["reward"]),
-                "active": bool(row["active"]),
+                "reward": float(
+                    row["reward"]
+                ),
+                "active": bool(
+                    row["active"]
+                ),
                 "created_at": row[
                     "created_at"
                 ],
@@ -2823,7 +3400,10 @@ async def admin_tasks(
 async def admin_task_submissions(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -2881,8 +3461,12 @@ async def admin_task_submissions(
                 "first_name": row["first_name"],
                 "task_title": row["title"],
                 "status": row["status"],
-                "reward": float(row["reward"]),
-                "proof_text": row["proof_text"],
+                "reward": float(
+                    row["reward"]
+                ),
+                "proof_text": row[
+                    "proof_text"
+                ],
                 "proof_filename": row[
                     "proof_filename"
                 ],
@@ -2898,7 +3482,9 @@ async def admin_task_submissions(
                 "rejection_reason": row[
                     "rejection_reason"
                 ],
-                "paid": bool(row["paid"]),
+                "paid": bool(
+                    row["paid"]
+                ),
             }
             for row in rows
         ]
@@ -2916,7 +3502,10 @@ async def admin_task_proof(
     submission_id: int,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -2927,7 +3516,9 @@ async def admin_task_proof(
         SELECT
             proof_data,
             proof_content_type
+
         FROM user_tasks
+
         WHERE id=?
         """,
         (submission_id,),
@@ -2936,6 +3527,7 @@ async def admin_task_proof(
     conn.close()
 
     if not row or not row["proof_data"]:
+
         raise HTTPException(
             status_code=404,
             detail="Proof image not found.",
@@ -2951,6 +3543,7 @@ async def admin_task_proof(
 
 
 class TaskDecision(BaseModel):
+
     reason: str = ""
 
 
@@ -2965,118 +3558,147 @@ async def approve_task(
     submission_id: int,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT
-            ut.id,
-            ut.user_id,
-            ut.task_id,
-            ut.reward,
-            ut.status,
-            ut.paid,
+    try:
 
-            t.title
+        conn.execute("BEGIN IMMEDIATE")
 
-        FROM user_tasks ut
+        row = conn.execute(
+            """
+            SELECT
+                ut.id,
+                ut.user_id,
+                ut.task_id,
+                ut.reward,
+                ut.status,
+                ut.paid,
 
-        JOIN tasks t
-            ON t.id=ut.task_id
+                t.title
 
-        WHERE ut.id=?
-        """,
-        (submission_id,),
-    ).fetchone()
+            FROM user_tasks ut
 
-    if not row:
-        conn.close()
+            JOIN tasks t
+                ON t.id=ut.task_id
 
-        raise HTTPException(
-            status_code=404,
-            detail="Submission not found.",
+            WHERE ut.id=?
+            """,
+            (submission_id,),
+        ).fetchone()
+
+        if not row:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=404,
+                detail="Submission not found.",
+            )
+
+        if row["paid"]:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Task reward has already "
+                    "been paid."
+                ),
+            )
+
+        if row["status"] != "pending":
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "This submission is not "
+                    "pending."
+                ),
+            )
+
+        reward = float(
+            row["reward"]
         )
 
-    if row["paid"]:
-        conn.close()
+        new_balance = add_balance(
+            conn,
+            row["user_id"],
+            reward,
+            "task_reward",
+            f"Task reward: {row['title']}",
+            row["task_id"],
+        )
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Task reward has already "
-                "been paid."
+        conn.execute(
+            """
+            UPDATE user_tasks
+            SET status='approved',
+                paid=1,
+                reviewed_at=?
+            WHERE id=?
+            AND status='pending'
+            AND paid=0
+            """,
+            (
+                now_utc(),
+                submission_id,
             ),
         )
 
-    if row["status"] != "pending":
-        conn.close()
-
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This submission is not "
-                "pending."
+        notify(
+            conn,
+            row["user_id"],
+            "✅ Task Approved",
+            (
+                f"Your task was approved "
+                f"and {reward:.2f} ETB "
+                f"was added to your balance."
             ),
         )
 
-    reward = float(row["reward"])
-
-    new_balance = add_balance(
-        conn,
-        row["user_id"],
-        reward,
-        "task_reward",
-        f"Task reward: {row['title']}",
-        row["task_id"],
-    )
-
-    conn.execute(
-        """
-        UPDATE user_tasks
-        SET status='approved',
-            paid=1,
-            reviewed_at=?
-        WHERE id=?
-        """,
-        (
-            now_utc(),
+        admin_log(
+            conn,
+            admin_id,
+            "approve_task",
+            "task_submission",
             submission_id,
-        ),
-    )
+            f"Reward={reward}",
+        )
 
-    notify(
-        conn,
-        row["user_id"],
-        "✅ Task Approved",
-        (
-            f"Your task was approved "
-            f"and {reward:.2f} ETB "
-            f"was added to your balance."
-        ),
-    )
+        conn.commit()
 
-    admin_log(
-        conn,
-        admin_id,
-        "approve_task",
-        "task_submission",
-        submission_id,
-        f"Reward={reward}",
-    )
+        return {
+            "success": True,
+            "status": "approved",
+            "reward": reward,
+            "balance": new_balance,
+        }
 
-    conn.commit()
-    conn.close()
+    except HTTPException:
+        raise
 
-    return {
-        "success": True,
-        "status": "approved",
-        "reward": reward,
-        "balance": new_balance,
-    }
+    except Exception:
+
+        conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Task approval failed.",
+        )
+
+    finally:
+
+        conn.close()
 
 
 # ============================================================
@@ -3091,100 +3713,128 @@ async def reject_task(
     request: TaskDecision,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT
-            id,
-            user_id,
-            status,
-            paid
-        FROM user_tasks
-        WHERE id=?
-        """,
-        (submission_id,),
-    ).fetchone()
+    try:
 
-    if not row:
-        conn.close()
+        conn.execute("BEGIN IMMEDIATE")
 
-        raise HTTPException(
-            status_code=404,
-            detail="Submission not found.",
-        )
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                user_id,
+                status,
+                paid
 
-    if row["paid"]:
-        conn.close()
+            FROM user_tasks
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This task has already "
-                "been paid."
-            ),
-        )
+            WHERE id=?
+            """,
+            (submission_id,),
+        ).fetchone()
 
-    if row["status"] != "pending":
-        conn.close()
+        if not row:
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This submission is not "
-                "pending."
-            ),
-        )
+            conn.rollback()
 
-    conn.execute(
-        """
-        UPDATE user_tasks
-        SET status='rejected',
-            reviewed_at=?,
-            rejection_reason=?
-        WHERE id=?
-        """,
-        (
-            now_utc(),
-            request.reason.strip(),
-            submission_id,
-        ),
-    )
-
-    notify(
-        conn,
-        row["user_id"],
-        "❌ Task Rejected",
-        (
-            "Your task proof was rejected."
-            + (
-                f" Reason: {request.reason.strip()}"
-                if request.reason.strip()
-                else ""
+            raise HTTPException(
+                status_code=404,
+                detail="Submission not found.",
             )
-        ),
-    )
 
-    admin_log(
-        conn,
-        admin_id,
-        "reject_task",
-        "task_submission",
-        submission_id,
-        request.reason.strip(),
-    )
+        if row["paid"]:
 
-    conn.commit()
-    conn.close()
+            conn.rollback()
 
-    return {
-        "success": True,
-        "status": "rejected",
-    }
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "This task has already "
+                    "been paid."
+                ),
+            )
+
+        if row["status"] != "pending":
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "This submission is not "
+                    "pending."
+                ),
+            )
+
+        conn.execute(
+            """
+            UPDATE user_tasks
+            SET status='rejected',
+                reviewed_at=?,
+                rejection_reason=?
+            WHERE id=?
+            AND status='pending'
+            """,
+            (
+                now_utc(),
+                request.reason.strip(),
+                submission_id,
+            ),
+        )
+
+        notify(
+            conn,
+            row["user_id"],
+            "❌ Task Rejected",
+            (
+                "Your task proof was rejected."
+                + (
+                    f" Reason: {request.reason.strip()}"
+                    if request.reason.strip()
+                    else ""
+                )
+            ),
+        )
+
+        admin_log(
+            conn,
+            admin_id,
+            "reject_task",
+            "task_submission",
+            submission_id,
+            request.reason.strip(),
+        )
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "status": "rejected",
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception:
+
+        conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Task rejection failed.",
+        )
+
+    finally:
+
+        conn.close()
 
 
 # ============================================================
@@ -3195,7 +3845,10 @@ async def reject_task(
 async def admin_users(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -3214,7 +3867,9 @@ async def admin_users(
             cbe_number,
             telebirr_number,
             registered_at
+
         FROM users
+
         ORDER BY user_id DESC
         """
     ).fetchall()
@@ -3228,7 +3883,9 @@ async def admin_users(
                 "username": row["username"],
                 "first_name": row["first_name"],
                 "last_name": row["last_name"],
-                "balance": float(row["balance"]),
+                "balance": float(
+                    row["balance"]
+                ),
                 "successful_referrals":
                     get_referral_count(
                         row["user_id"]
@@ -3261,7 +3918,10 @@ async def admin_user_details(
     target_user_id: int,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -3277,6 +3937,7 @@ async def admin_user_details(
     ).fetchone()
 
     if not user_row:
+
         conn.close()
 
         raise HTTPException(
@@ -3321,8 +3982,11 @@ async def admin_user_details(
             created_at,
             reviewed_at,
             rejection_reason
+
         FROM withdrawals
+
         WHERE user_id=?
+
         ORDER BY id DESC
         """,
         (target_user_id,),
@@ -3338,9 +4002,13 @@ async def admin_user_details(
             reference_id,
             balance_after,
             created_at
+
         FROM balance_history
+
         WHERE user_id=?
+
         ORDER BY id DESC
+
         LIMIT 200
         """,
         (target_user_id,),
@@ -3350,10 +4018,18 @@ async def admin_user_details(
 
     return {
         "user": {
-            "user_id": user_row["user_id"],
-            "username": user_row["username"],
-            "first_name": user_row["first_name"],
-            "last_name": user_row["last_name"],
+            "user_id": user_row[
+                "user_id"
+            ],
+            "username": user_row[
+                "username"
+            ],
+            "first_name": user_row[
+                "first_name"
+            ],
+            "last_name": user_row[
+                "last_name"
+            ],
             "balance": float(
                 user_row["balance"]
             ),
@@ -3363,7 +4039,9 @@ async def admin_user_details(
             "suspicious": bool(
                 user_row["suspicious"]
             ),
-            "cbe": user_row["cbe_number"],
+            "cbe": user_row[
+                "cbe_number"
+            ],
             "telebirr": user_row[
                 "telebirr_number"
             ],
@@ -3378,21 +4056,27 @@ async def admin_user_details(
                 "user_id": row[
                     "referred_id"
                 ],
-                "username": row["username"],
+                "username": row[
+                    "username"
+                ],
                 "first_name": row[
                     "first_name"
                 ],
                 "joined_all": bool(
                     row["joined_all"]
                 ),
-                "status": row["status"],
+                "status": row[
+                    "status"
+                ],
                 "reward": float(
                     row["reward"]
                 ),
                 "created_at": row[
                     "created_at"
                 ],
-                "paid_at": row["paid_at"],
+                "paid_at": row[
+                    "paid_at"
+                ],
             }
             for row in referrals
         ],
@@ -3409,7 +4093,9 @@ async def admin_user_details(
                 "wallet_number": row[
                     "wallet_number"
                 ],
-                "status": row["status"],
+                "status": row[
+                    "status"
+                ],
                 "created_at": row[
                     "created_at"
                 ],
@@ -3429,7 +4115,9 @@ async def admin_user_details(
                 "amount": float(
                     row["amount"]
                 ),
-                "type": row["type"],
+                "type": row[
+                    "type"
+                ],
                 "description": row[
                     "description"
                 ],
@@ -3453,6 +4141,7 @@ async def admin_user_details(
 # ============================================================
 
 class BalanceAdjustment(BaseModel):
+
     amount: float
     reason: str
 
@@ -3465,17 +4154,22 @@ async def adjust_balance(
     request: BalanceAdjustment,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
     if request.amount == 0:
+
         raise HTTPException(
             status_code=400,
             detail="Amount cannot be zero.",
         )
 
     if not request.reason.strip():
+
         raise HTTPException(
             status_code=400,
             detail="Reason is required.",
@@ -3483,62 +4177,82 @@ async def adjust_balance(
 
     conn = db()
 
-    row = conn.execute(
-        """
-        SELECT balance
-        FROM users
-        WHERE user_id=?
-        """,
-        (target_user_id,),
-    ).fetchone()
+    try:
 
-    if not row:
-        conn.close()
+        conn.execute("BEGIN IMMEDIATE")
 
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
+        row = conn.execute(
+            """
+            SELECT balance
+            FROM users
+            WHERE user_id=?
+            """,
+            (target_user_id,),
+        ).fetchone()
+
+        if not row:
+
+            conn.rollback()
+
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
+
+        new_balance = add_balance(
+            conn,
+            target_user_id,
+            request.amount,
+            "admin_adjustment",
+            request.reason.strip(),
+            None,
         )
 
-    new_balance = add_balance(
-        conn,
-        target_user_id,
-        request.amount,
-        "admin_adjustment",
-        request.reason.strip(),
-        None,
-    )
+        notify(
+            conn,
+            target_user_id,
+            "💰 Balance Updated",
+            (
+                f"Admin balance adjustment: "
+                f"{request.amount:+.2f} ETB."
+            ),
+        )
 
-    notify(
-        conn,
-        target_user_id,
-        "💰 Balance Updated",
-        (
-            f"Admin balance adjustment: "
-            f"{request.amount:+.2f} ETB."
-        ),
-    )
+        admin_log(
+            conn,
+            admin_id,
+            "balance_adjustment",
+            "user",
+            target_user_id,
+            (
+                f"Amount={request.amount}; "
+                f"Reason={request.reason}"
+            ),
+        )
 
-    admin_log(
-        conn,
-        admin_id,
-        "balance_adjustment",
-        "user",
-        target_user_id,
-        (
-            f"Amount={request.amount}; "
-            f"Reason={request.reason}"
-        ),
-    )
+        conn.commit()
 
-    conn.commit()
-    conn.close()
+        return {
+            "success": True,
+            "amount": request.amount,
+            "balance": new_balance,
+        }
 
-    return {
-        "success": True,
-        "amount": request.amount,
-        "balance": new_balance,
-    }
+    except HTTPException:
+        raise
+
+    except Exception:
+
+        conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Balance adjustment failed.",
+        )
+
+    finally:
+
+        conn.close()
 
 
 # ============================================================
@@ -3546,6 +4260,7 @@ async def adjust_balance(
 # ============================================================
 
 class AnnouncementRequest(BaseModel):
+
     title: str
     message: str
 
@@ -3555,9 +4270,26 @@ async def create_announcement(
     request: AnnouncementRequest,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
+
+    if not request.title.strip():
+
+        raise HTTPException(
+            status_code=400,
+            detail="Announcement title is required.",
+        )
+
+    if not request.message.strip():
+
+        raise HTTPException(
+            status_code=400,
+            detail="Announcement message is required.",
+        )
 
     conn = db()
 
@@ -3581,12 +4313,12 @@ async def create_announcement(
 
     announcement_id = cur.lastrowid
 
-    # Create notification for all users.
     users = conn.execute(
         "SELECT user_id FROM users"
     ).fetchall()
 
     for row in users:
+
         notify(
             conn,
             row["user_id"],
@@ -3613,10 +4345,11 @@ async def create_announcement(
 
 
 # ============================================================
-# ADMIN MAINTENANCE MODE
+# ADMIN MAINTENANCE
 # ============================================================
 
 class MaintenanceRequest(BaseModel):
+
     enabled: bool
 
 
@@ -3625,7 +4358,10 @@ async def maintenance(
     request: MaintenanceRequest,
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_id = admin_required(user)
 
@@ -3662,7 +4398,10 @@ async def maintenance(
 async def admin_logs(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -3678,8 +4417,11 @@ async def admin_logs(
             target_id,
             details,
             created_at
+
         FROM admin_logs
+
         ORDER BY id DESC
+
         LIMIT 300
         """
     ).fetchall()
@@ -3690,15 +4432,21 @@ async def admin_logs(
         "logs": [
             {
                 "id": row["id"],
-                "admin_id": row["admin_id"],
-                "action": row["action"],
+                "admin_id": row[
+                    "admin_id"
+                ],
+                "action": row[
+                    "action"
+                ],
                 "target_type": row[
                     "target_type"
                 ],
                 "target_id": row[
                     "target_id"
                 ],
-                "details": row["details"],
+                "details": row[
+                    "details"
+                ],
                 "created_at": row[
                     "created_at"
                 ],
@@ -3716,7 +4464,10 @@ async def admin_logs(
 async def testing_info(
     authorization: Optional[str] = Header(default=None),
 ):
-    user, _ = get_current_user(authorization)
+
+    user, _ = get_current_user(
+        authorization
+    )
 
     admin_required(user)
 
@@ -3742,13 +4493,32 @@ async def testing_info(
 
     return {
         "database": "ok",
+
         "users": int(users),
-        "tasks": int(tasks_count),
-        "task_submissions": int(submissions),
-        "withdrawals": int(withdrawals_count),
+
+        "tasks": int(
+            tasks_count
+        ),
+
+        "task_submissions": int(
+            submissions
+        ),
+
+        "withdrawals": int(
+            withdrawals_count
+        ),
+
         "referral_reward": REFERRAL_REWARD,
+
         "daily_bonus": DAILY_BONUS,
+
+        "daily_bonus_cooldown_hours": 24,
+
         "minimum_withdrawal": MIN_WITHDRAWAL,
-        "admin_configured": bool(ADMIN_IDS),
+
+        "admin_configured": bool(
+            ADMIN_IDS
+        ),
+
         "required_channels": REQUIRED_CHANNELS,
     }
