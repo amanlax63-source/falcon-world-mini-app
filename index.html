@@ -12,7 +12,6 @@
 
     <title>Falcon World</title>
 
-    <!-- Telegram Mini App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
@@ -28,7 +27,7 @@
             width: 100%;
             min-height: 100%;
             background: #071426;
-            color: #ffffff;
+            color: #fff;
             font-family: Arial, sans-serif;
         }
 
@@ -36,20 +35,27 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        button {
+        button,
+        input,
+        select,
+        textarea {
             font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
         }
 
         .app {
             width: 100%;
             max-width: 520px;
             margin: auto;
-            padding: 18px 16px 30px;
+            padding: 16px 15px 30px;
         }
 
         .header {
             text-align: center;
-            padding: 15px 0 22px;
+            padding: 12px 0 20px;
         }
 
         .logo {
@@ -66,7 +72,7 @@
         }
 
         .brand {
-            margin-top: 12px;
+            margin-top: 11px;
             font-size: 26px;
             font-weight: 800;
             letter-spacing: 1px;
@@ -75,16 +81,16 @@
         .subtitle {
             margin-top: 5px;
             color: #91a8c4;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .balance-card {
             background: linear-gradient(145deg, #12345c, #0b1d35);
             border: 1px solid #1d4f80;
             border-radius: 20px;
-            padding: 22px;
+            padding: 21px;
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .balance-label {
@@ -93,18 +99,18 @@
         }
 
         .balance {
-            margin-top: 8px;
+            margin-top: 7px;
             font-size: 34px;
             font-weight: 800;
         }
 
         .currency {
-            font-size: 16px;
+            font-size: 15px;
             color: #91b9df;
         }
 
         .user-box {
-            margin-top: 12px;
+            margin-top: 10px;
             color: #8fa7c1;
             font-size: 12px;
         }
@@ -116,7 +122,7 @@
             color: #f1d78b;
             border-radius: 14px;
             padding: 13px;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
             font-size: 13px;
             text-align: center;
         }
@@ -124,34 +130,33 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 11px;
         }
 
         .menu-btn {
-            min-height: 92px;
+            min-height: 91px;
             border: 1px solid #183d64;
             background: #0c1d32;
-            color: white;
+            color: #fff;
             border-radius: 17px;
-            padding: 15px 10px;
-            cursor: pointer;
-            transition: 0.15s;
+            padding: 14px 10px;
+            transition: .15s;
         }
 
         .menu-btn:active {
-            transform: scale(0.97);
+            transform: scale(.97);
             background: #112b49;
         }
 
         .menu-icon {
             display: block;
             font-size: 27px;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
         }
 
         .menu-title {
             display: block;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
         }
 
@@ -167,7 +172,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-bottom: 17px;
         }
 
         .back-btn {
@@ -176,9 +181,8 @@
             border: 1px solid #1d456e;
             border-radius: 13px;
             background: #0d2138;
-            color: white;
+            color: #fff;
             font-size: 22px;
-            cursor: pointer;
         }
 
         .page-title {
@@ -190,7 +194,7 @@
             background: #0c1d32;
             border: 1px solid #183d64;
             border-radius: 17px;
-            padding: 18px;
+            padding: 17px;
             margin-bottom: 13px;
         }
 
@@ -212,10 +216,10 @@
         }
 
         .ref-link {
-            margin-top: 12px;
+            margin-top: 11px;
             background: #071426;
             border: 1px solid #183d64;
-            padding: 12px;
+            padding: 11px;
             border-radius: 12px;
             font-size: 12px;
             word-break: break-all;
@@ -224,7 +228,7 @@
 
         .action-row {
             display: flex;
-            gap: 10px;
+            gap: 9px;
             margin-top: 12px;
         }
 
@@ -234,53 +238,151 @@
             border: 0;
             border-radius: 12px;
             background: #1976d2;
-            color: white;
+            color: #fff;
             font-weight: 700;
-            cursor: pointer;
+            padding: 10px;
         }
 
         .action-btn.secondary {
             background: #173552;
         }
 
-        .wallet-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+        .action-btn.danger {
+            background: #8b2635;
+        }
+
+        .action-btn:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .input {
+            width: 100%;
+            min-height: 46px;
+            background: #071426;
+            color: #fff;
+            border: 1px solid #21496f;
+            border-radius: 12px;
+            padding: 12px;
+            outline: none;
+            margin-top: 8px;
+        }
+
+        .input:focus {
+            border-color: #3188d7;
+        }
+
+        .wallet-box {
+            background: #071426;
+            border: 1px solid #183d64;
+            border-radius: 13px;
+            padding: 14px;
+            margin-top: 10px;
         }
 
         .wallet-name {
             font-weight: 700;
         }
 
-        .wallet-status {
-            color: #839bb5;
+        .wallet-number {
+            color: #a9c9e8;
             font-size: 13px;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+        .status {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .success {
+            color: #67d89a;
+        }
+
+        .warning {
+            color: #f1d78b;
+        }
+
+        .error {
+            color: #ff7d88;
+        }
+
+        .task-card {
+            background: #071426;
+            border: 1px solid #183d64;
+            border-radius: 14px;
+            padding: 14px;
+            margin-top: 10px;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .task-reward {
+            color: #67d89a;
+            font-weight: 800;
+            margin-top: 7px;
+        }
+
+        .task-description {
+            color: #8fa7c1;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 7px;
+        }
+
+        .service-btn {
+            width: 100%;
+            min-height: 52px;
+            background: #0d2138;
+            color: #fff;
+            border: 1px solid #183d64;
+            border-radius: 13px;
+            margin-top: 9px;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 700;
+        }
+
+        .service-btn:active {
+            background: #173552;
         }
 
         .empty {
             text-align: center;
-            padding: 30px 15px;
+            padding: 27px 15px;
             color: #8fa7c1;
+        }
+
+        .bonus-card {
+            text-align: center;
+        }
+
+        .bonus-amount {
+            font-size: 31px;
+            font-weight: 800;
+            margin: 8px 0;
         }
 
         .footer {
             text-align: center;
             color: #607993;
             font-size: 11px;
-            margin-top: 25px;
+            margin-top: 23px;
         }
 
         .toast {
             position: fixed;
-            left: 16px;
-            right: 16px;
+            left: 15px;
+            right: 15px;
             bottom: 20px;
-            z-index: 999;
+            z-index: 9999;
             background: #102b48;
             border: 1px solid #28547e;
-            color: white;
+            color: #fff;
             border-radius: 13px;
             padding: 13px;
             text-align: center;
@@ -288,10 +390,14 @@
             display: none;
         }
 
+        .small {
+            font-size: 12px;
+        }
+
         @media (max-width: 350px) {
             .app {
-                padding-left: 12px;
-                padding-right: 12px;
+                padding-left: 11px;
+                padding-right: 11px;
             }
 
             .grid {
@@ -319,9 +425,7 @@
         <div class="header">
             <div class="logo">🦅</div>
 
-            <div class="brand">
-                FALCON WORLD
-            </div>
+            <div class="brand">FALCON WORLD</div>
 
             <div class="subtitle">
                 Earn • Refer • Withdraw
@@ -356,6 +460,11 @@
                 <span class="menu-title">Balance</span>
             </button>
 
+            <button class="menu-btn" data-page="bonusPage">
+                <span class="menu-icon">🎁</span>
+                <span class="menu-title">Daily Bonus</span>
+            </button>
+
             <button class="menu-btn" data-page="referralPage">
                 <span class="menu-icon">👥</span>
                 <span class="menu-title">Referral</span>
@@ -377,8 +486,8 @@
             </button>
 
             <button class="menu-btn" data-page="supportPage">
-                <span class="menu-icon">💬</span>
-                <span class="menu-title">Support</span>
+                <span class="menu-icon">🛠</span>
+                <span class="menu-title">Services</span>
             </button>
 
         </div>
@@ -418,8 +527,51 @@
             </div>
 
             <div class="muted">
-                Minimum withdrawal: 30 ETB
+                Referral reward: 2 ETB each
             </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Minimum Withdrawal</div>
+
+            <div class="big-number">
+                30 ETB
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- DAILY BONUS -->
+    <section id="bonusPage" class="page">
+
+        <div class="page-header">
+            <button class="back-btn" data-back>‹</button>
+            <div class="page-title">Daily Bonus</div>
+        </div>
+
+        <div class="card bonus-card">
+
+            <div class="card-title">
+                🎁 Daily Bonus
+            </div>
+
+            <div class="bonus-amount">
+                0.50 ETB
+            </div>
+
+            <div id="bonusStatus" class="muted">
+                Checking...
+            </div>
+
+            <button
+                id="claimBonusBtn"
+                class="action-btn"
+                style="width:100%; margin-top:15px;"
+            >
+                🎁 Claim 0.50 ETB
+            </button>
+
         </div>
 
     </section>
@@ -443,6 +595,10 @@
                 0
             </div>
 
+            <div class="muted">
+                Earn 2 ETB for every successful referral.
+            </div>
+
         </div>
 
         <div class="card">
@@ -452,11 +608,12 @@
             </div>
 
             <div class="big-number">
-                1 – 5 ETB
+                2 ETB
             </div>
 
             <div class="muted">
-                Reward depends on the referral system.
+                Reward is credited after your referred user
+                completes channel verification.
             </div>
 
         </div>
@@ -496,16 +653,14 @@
             <div class="page-title">Tasks</div>
         </div>
 
-        <div class="card">
-            <div class="empty">
-                🎯
-                <br><br>
-                No tasks loaded yet.
-                <br>
-                <span class="muted">
-                    New tasks will appear here.
-                </span>
+        <div id="tasksContainer">
+
+            <div class="card">
+                <div class="empty">
+                    Loading tasks...
+                </div>
             </div>
+
         </div>
 
     </section>
@@ -521,57 +676,74 @@
 
         <div class="card">
 
-            <div class="wallet-item">
-
-                <div>
-                    <div class="wallet-name">
-                        🏦 CBE
-                    </div>
-
-                    <div class="wallet-status">
-                        Not added
-                    </div>
-                </div>
-
-                <div>
-                    ➜
-                </div>
-
+            <div class="card-title">
+                🏦 CBE
             </div>
 
-        </div>
-
-        <div class="card">
-
-            <div class="wallet-item">
-
-                <div>
-                    <div class="wallet-name">
-                        📱 Telebirr
-                    </div>
-
-                    <div class="wallet-status">
-                        Not added
-                    </div>
+            <div id="cbeWallet">
+                <div class="muted">
+                    Not added
                 </div>
-
-                <div>
-                    ➜
-                </div>
-
             </div>
 
-        </div>
-
-        <div class="card">
+            <input
+                id="cbeInput"
+                class="input"
+                type="text"
+                inputmode="numeric"
+                maxlength="13"
+                placeholder="Enter 13-digit CBE account"
+            >
 
             <button
-                id="walletManageBtn"
+                id="saveCbeBtn"
                 class="action-btn"
-                style="width:100%;"
+                style="width:100%; margin-top:9px;"
             >
-                Manage Wallet
+                Save CBE
             </button>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                📱 Telebirr
+            </div>
+
+            <div id="telebirrWallet">
+                <div class="muted">
+                    Not added
+                </div>
+            </div>
+
+            <input
+                id="telebirrInput"
+                class="input"
+                type="text"
+                inputmode="numeric"
+                maxlength="10"
+                placeholder="Enter 10-digit Telebirr number"
+            >
+
+            <button
+                id="saveTelebirrBtn"
+                class="action-btn"
+                style="width:100%; margin-top:9px;"
+            >
+                Save Telebirr
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <div class="muted">
+                You can save both CBE and Telebirr.
+                If both are saved, you can choose which one
+                to use when withdrawing.
+            </div>
 
         </div>
 
@@ -609,65 +781,134 @@
                 <br>
                 • CBE and Telebirr supported
                 <br>
-                • Wallet must be added first
+                • If only one wallet exists, it is selected automatically
+                <br>
+                • If both wallets exist, choose one
+                <br>
+                • Balance is deducted immediately
+                <br>
+                • Admin reviews the request
             </div>
 
         </div>
 
         <div class="card">
 
+            <div class="card-title">
+                Amount
+            </div>
+
+            <input
+                id="withdrawAmount"
+                class="input"
+                type="number"
+                min="30"
+                step="0.01"
+                placeholder="Enter amount"
+            >
+
+            <div id="withdrawWalletBox" style="margin-top:14px;">
+            </div>
+
             <button
                 id="withdrawBtn"
                 class="action-btn"
-                style="width:100%;"
+                style="width:100%; margin-top:13px;"
             >
-                Request Withdrawal
+                💸 Request Withdrawal
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                Withdrawal History
+            </div>
+
+            <div id="withdrawHistory">
+                <div class="empty">
+                    Loading...
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- SERVICES -->
+    <section id="supportPage" class="page">
+
+        <div class="page-header">
+            <button class="back-btn" data-back>‹</button>
+            <div class="page-title">Services</div>
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                🛠 Falcon World Services
+            </div>
+
+            <div class="muted">
+                Choose the service you need.
+            </div>
+
+            <button class="service-btn" data-service="Business Inquiry">
+                💼 Business Inquiry
+            </button>
+
+            <button class="service-btn" data-service="Advertising">
+                📢 Advertising
+            </button>
+
+            <button class="service-btn" data-service="Promotion">
+                🚀 Promotion
+            </button>
+
+            <button class="service-btn" data-service="Channel Sale / Purchase">
+                📣 Channel Sale / Purchase
+            </button>
+
+            <button class="service-btn" data-service="Technical Support">
+                🔧 Technical Support
+            </button>
+
+            <button class="service-btn" data-service="UCD Team">
+                👥 UCD Team
+            </button>
+
+            <button class="service-btn" data-service="DMR">
+                🛡 DMR
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+                Advertising & Promotion
+            </div>
+
+            <button class="service-btn" data-service="Telegram Channel Promotion">
+                📢 Telegram Channel Promotion
+            </button>
+
+            <button class="service-btn" data-service="Telegram Group Promotion">
+                👥 Telegram Group Promotion
+            </button>
+
+            <button class="service-btn" data-service="Social Media Advertising">
+                📱 Social Media Advertising
             </button>
 
         </div>
 
     </section>
 
-
-    <!-- SUPPORT -->
-    <section id="supportPage" class="page">
-
-        <div class="page-header">
-            <button class="back-btn" data-back>‹</button>
-            <div class="page-title">Support</div>
-        </div>
-
-        <div class="card">
-
-            <div class="card-title">
-                Need Help?
-            </div>
-
-            <div class="muted">
-                If you have any questions or problems,
-                contact our support team.
-            </div>
-
-            <div style="margin-top:15px;">
-                <b>@Aman_M12</b>
-            </div>
-
-            <div class="action-row">
-
-                <button
-                    id="supportBtn"
-                    class="action-btn"
-                >
-                    💬 Contact Support
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
 </div>
+
 
 <div id="toast" class="toast"></div>
 
@@ -677,9 +918,10 @@
 
     "use strict";
 
-    /* --------------------------------
-       TELEGRAM WEB APP
-    -------------------------------- */
+
+    /* ==============================
+       TELEGRAM
+    ============================== */
 
     const tg =
         window.Telegram &&
@@ -689,27 +931,37 @@
 
 
     if (tg) {
-
         try {
             tg.ready();
-        } catch (e) {
-            console.log("Telegram ready error:", e);
-        }
-
-        try {
             tg.expand();
         } catch (e) {
-            console.log("Telegram expand error:", e);
+            console.log(e);
         }
-
     }
 
 
-    /* --------------------------------
-       ELEMENTS
-    -------------------------------- */
+    /* ==============================
+       GLOBAL DATA
+    ============================== */
 
-    const pages = document.querySelectorAll(".page");
+    let appData = {
+        balance: 0,
+        referralCount: 0,
+        cbe: "",
+        telebirr: "",
+        joinedAll: false
+    };
+
+
+    let currentPage = "homePage";
+
+
+    /* ==============================
+       ELEMENTS
+    ============================== */
+
+    const pages =
+        document.querySelectorAll(".page");
 
     const homeBalance =
         document.getElementById("homeBalance");
@@ -732,13 +984,16 @@
     const balanceReferrals =
         document.getElementById("balanceReferrals");
 
+    const verifyNotice =
+        document.getElementById("verifyNotice");
+
     const toast =
         document.getElementById("toast");
 
 
-    /* --------------------------------
-       TOAST
-    -------------------------------- */
+    /* ==============================
+       MESSAGE
+    ============================== */
 
     function showMessage(message) {
 
@@ -749,14 +1004,13 @@
 
         setTimeout(function () {
             toast.style.display = "none";
-        }, 2200);
-
+        }, 2600);
     }
 
 
-    /* --------------------------------
-       USER
-    -------------------------------- */
+    /* ==============================
+       TELEGRAM USER
+    ============================== */
 
     function getTelegramUser() {
 
@@ -771,7 +1025,7 @@
             }
 
         } catch (e) {
-            console.log("User error:", e);
+            console.log(e);
         }
 
         return null;
@@ -782,11 +1036,72 @@
         getTelegramUser();
 
 
-    /* --------------------------------
-       USER DISPLAY
-    -------------------------------- */
+    /* ==============================
+       API
+    ============================== */
 
-    function setupUser() {
+    async function api(
+        path,
+        options = {}
+    ) {
+
+        const headers =
+            options.headers || {};
+
+        headers["Content-Type"] =
+            "application/json";
+
+
+        if (
+            tg &&
+            tg.initData
+        ) {
+
+            headers["Authorization"] =
+                "tma " + tg.initData;
+
+        }
+
+
+        options.headers = headers;
+
+
+        const response =
+            await fetch(
+                path,
+                options
+            );
+
+
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = {};
+        }
+
+
+        if (!response.ok) {
+
+            let message =
+                data.detail ||
+                data.message ||
+                "Something went wrong.";
+
+            throw new Error(message);
+        }
+
+
+        return data;
+    }
+
+
+    /* ==============================
+       USER DISPLAY
+    ============================== */
+
+    function setupUserDisplay() {
 
         if (!telegramUser) {
 
@@ -825,161 +1140,1284 @@
             encodeURIComponent(userId);
 
 
-        showTelegramStatus();
+        if (
+            tg &&
+            tg.initData
+        ) {
+
+            userInfo.textContent +=
+                " • Connected";
+
+        }
 
     }
 
 
-    /* --------------------------------
-       TELEGRAM STATUS
-    -------------------------------- */
+    /* ==============================
+       UPDATE BALANCE UI
+    ============================== */
 
-    function showTelegramStatus() {
+    function updateBalanceUI() {
 
-        if (!tg) {
+        const amount =
+            Number(appData.balance || 0)
+                .toFixed(2);
+
+
+        homeBalance.textContent =
+            amount;
+
+        balanceAmount.textContent =
+            amount;
+
+        withdrawBalance.textContent =
+            amount;
+
+
+        referralCount.textContent =
+            String(
+                appData.referralCount || 0
+            );
+
+        balanceReferrals.textContent =
+            String(
+                appData.referralCount || 0
+            );
+
+
+        if (
+            appData.joinedAll === false
+        ) {
+
+            verifyNotice.style.display =
+                "block";
+
+        } else {
+
+            verifyNotice.style.display =
+                "none";
+
+        }
+
+    }
+
+
+    /* ==============================
+       LOAD USER
+    ============================== */
+
+    async function loadUser() {
+
+        if (!tg || !tg.initData) {
+
+            setupUserDisplay();
+
             return;
         }
 
+
         try {
+
+            const data =
+                await api(
+                    "/api/register",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            init_data: tg.initData,
+                            start_param:
+                                tg.initDataUnsafe &&
+                                tg.initDataUnsafe.start_param
+                                    ? tg.initDataUnsafe.start_param
+                                    : ""
+                        })
+                    }
+                );
+
+
+            if (data.user) {
+
+                appData.balance =
+                    Number(
+                        data.user.balance || 0
+                    );
+
+                appData.joinedAll =
+                    Boolean(
+                        data.user.joined_all
+                    );
+
+            }
+
+
+        } catch (e) {
+
+            console.log(
+                "Register error:",
+                e
+            );
+
+        }
+
+
+        try {
+
+            const data =
+                await api(
+                    "/api/me"
+                );
+
+
+            if (data.user) {
+
+                appData.balance =
+                    Number(
+                        data.user.balance || 0
+                    );
+
+                appData.joinedAll =
+                    Boolean(
+                        data.user.joined_all
+                    );
+
+                appData.cbe =
+                    data.user.cbe_number || "";
+
+                appData.telebirr =
+                    data.user.telebirr_number || "";
+
+            }
+
 
             if (
-                tg.initData &&
-                tg.initData.length > 0
+                typeof data.successful_referrals !==
+                "undefined"
             ) {
 
-                userInfo.textContent +=
-                    " • Connected";
+                appData.referralCount =
+                    Number(
+                        data.successful_referrals || 0
+                    );
 
             }
+
 
         } catch (e) {
-            console.log(e);
+
+            console.log(
+                "ME error:",
+                e
+            );
+
         }
 
+
+        updateBalanceUI();
+        renderWallets();
+        renderWithdrawWallets();
     }
 
 
-    /* --------------------------------
-       NAVIGATION
-    -------------------------------- */
+    /* ==============================
+       REFERRAL DATA
+    ============================== */
 
-    function openPage(pageId) {
-
-        pages.forEach(function (page) {
-            page.classList.remove("active");
-        });
-
-
-        const target =
-            document.getElementById(pageId);
-
-
-        if (target) {
-            target.classList.add("active");
-        }
-
-
-        if (tg) {
-
-            try {
-
-                if (
-                    pageId === "homePage"
-                ) {
-
-                    if (tg.BackButton) {
-                        tg.BackButton.hide();
-                    }
-
-                } else {
-
-                    if (tg.BackButton) {
-                        tg.BackButton.show();
-                    }
-
-                }
-
-            } catch (e) {
-                console.log(e);
-            }
-
-        }
-
-    }
-
-
-    /* --------------------------------
-       MENU BUTTONS
-    -------------------------------- */
-
-    document
-        .querySelectorAll(".menu-btn")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    const page =
-                        button.getAttribute(
-                            "data-page"
-                        );
-
-                    openPage(page);
-
-                }
-            );
-
-        });
-
-
-    /* --------------------------------
-       BACK BUTTONS
-    -------------------------------- */
-
-    document
-        .querySelectorAll("[data-back]")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    openPage("homePage");
-
-                }
-            );
-
-        });
-
-
-    /* --------------------------------
-       TELEGRAM BACK BUTTON
-    -------------------------------- */
-
-    if (tg) {
+    async function loadReferral() {
 
         try {
 
-            tg.BackButton.onClick(
-                function () {
-                    openPage("homePage");
-                }
-            );
+            const data =
+                await api(
+                    "/api/referral"
+                );
+
+
+            if (
+                typeof data.count !==
+                "undefined"
+            ) {
+
+                appData.referralCount =
+                    Number(
+                        data.count || 0
+                    );
+
+            }
+
+
+            if (
+                data.referral_link
+            ) {
+
+                referralLink.textContent =
+                    data.referral_link;
+
+            }
+
+
+            referralCount.textContent =
+                String(
+                    appData.referralCount
+                );
+
+            balanceReferrals.textContent =
+                String(
+                    appData.referralCount
+                );
 
         } catch (e) {
-            console.log(e);
+
+            console.log(
+                "Referral error:",
+                e
+            );
+
         }
 
     }
 
 
-    /* --------------------------------
-       COPY REFERRAL
-    -------------------------------- */
+    /* ==============================
+       DAILY BONUS STATUS
+    ============================== */
+
+    async function loadBonusStatus() {
+
+        const status =
+            document.getElementById(
+                "bonusStatus"
+            );
+
+        const button =
+            document.getElementById(
+                "claimBonusBtn"
+            );
+
+
+        if (!status || !button) {
+            return;
+        }
+
+
+        try {
+
+            const data =
+                await api(
+                    "/api/daily-bonus"
+                );
+
+
+            if (data.claimed) {
+
+                status.textContent =
+                    "⏳ Already claimed. Next bonus in " +
+                    formatSeconds(
+                        Number(
+                            data.remaining_seconds || 0
+                        )
+                    );
+
+                status.className =
+                    "warning";
+
+                button.disabled =
+                    true;
+
+                button.textContent =
+                    "⏳ Already Claimed";
+
+            } else {
+
+                status.textContent =
+                    "🎁 Your 0.50 ETB bonus is ready!";
+
+                status.className =
+                    "success";
+
+                button.disabled =
+                    false;
+
+                button.textContent =
+                    "🎁 Claim 0.50 ETB";
+
+            }
+
+        } catch (e) {
+
+            status.textContent =
+                e.message;
+
+            status.className =
+                "warning";
+
+            button.disabled =
+                false;
+
+        }
+
+    }
+
+
+    function formatSeconds(seconds) {
+
+        seconds =
+            Math.max(
+                0,
+                Number(seconds || 0)
+            );
+
+
+        const hours =
+            Math.floor(
+                seconds / 3600
+            );
+
+        const minutes =
+            Math.floor(
+                (seconds % 3600) / 60
+            );
+
+        const secs =
+            seconds % 60;
+
+
+        if (hours > 0) {
+
+            return (
+                hours +
+                "h " +
+                minutes +
+                "m"
+            );
+
+        }
+
+
+        if (minutes > 0) {
+
+            return (
+                minutes +
+                "m " +
+                secs +
+                "s"
+            );
+
+        }
+
+
+        return secs + "s";
+    }
+
+
+    /* ==============================
+       CLAIM BONUS
+    ============================== */
+
+    const claimBonusBtn =
+        document.getElementById(
+            "claimBonusBtn"
+        );
+
+
+    if (claimBonusBtn) {
+
+        claimBonusBtn.addEventListener(
+            "click",
+            async function () {
+
+                claimBonusBtn.disabled =
+                    true;
+
+                claimBonusBtn.textContent =
+                    "Processing...";
+
+
+                try {
+
+                    const data =
+                        await api(
+                            "/api/daily-bonus",
+                            {
+                                method: "POST"
+                            }
+                        );
+
+
+                    if (
+                        typeof data.balance !==
+                        "undefined"
+                    ) {
+
+                        appData.balance =
+                            Number(
+                                data.balance
+                            );
+
+                    } else {
+
+                        appData.balance +=
+                            0.50;
+
+                    }
+
+
+                    updateBalanceUI();
+
+                    showMessage(
+                        "🎉 0.50 ETB Daily Bonus added!"
+                    );
+
+
+                    await loadBonusStatus();
+
+
+                } catch (e) {
+
+                    showMessage(
+                        e.message
+                    );
+
+                    await loadBonusStatus();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ==============================
+       WALLET RENDER
+    ============================== */
+
+    function renderWallets() {
+
+        const cbe =
+            document.getElementById(
+                "cbeWallet"
+            );
+
+        const telebirr =
+            document.getElementById(
+                "telebirrWallet"
+            );
+
+
+        if (appData.cbe) {
+
+            cbe.innerHTML =
+                '<div class="wallet-box">' +
+                '<div class="wallet-name">🏦 CBE</div>' +
+                '<div class="wallet-number">' +
+                escapeHtml(appData.cbe) +
+                '</div>' +
+                '<div class="status success">✓ Saved</div>' +
+                '</div>';
+
+        } else {
+
+            cbe.innerHTML =
+                '<div class="muted">Not added</div>';
+
+        }
+
+
+        if (appData.telebirr) {
+
+            telebirr.innerHTML =
+                '<div class="wallet-box">' +
+                '<div class="wallet-name">📱 Telebirr</div>' +
+                '<div class="wallet-number">' +
+                escapeHtml(appData.telebirr) +
+                '</div>' +
+                '<div class="status success">✓ Saved</div>' +
+                '</div>';
+
+        } else {
+
+            telebirr.innerHTML =
+                '<div class="muted">Not added</div>';
+
+        }
+
+    }
+
+
+    /* ==============================
+       SAVE WALLET
+    ============================== */
+
+    async function saveWallet(
+        type,
+        number
+    ) {
+
+        try {
+
+            const data =
+                await api(
+                    "/api/wallet",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            wallet_type: type,
+                            wallet_number: number
+                        })
+                    }
+                );
+
+
+            if (type === "CBE") {
+                appData.cbe = number;
+            }
+
+            if (type === "Telebirr") {
+                appData.telebirr = number;
+            }
+
+
+            renderWallets();
+            renderWithdrawWallets();
+
+
+            showMessage(
+                data.message ||
+                type + " wallet saved successfully."
+            );
+
+
+        } catch (e) {
+
+            showMessage(
+                e.message
+            );
+
+        }
+
+    }
+
+
+    const saveCbeBtn =
+        document.getElementById(
+            "saveCbeBtn"
+        );
+
+
+    if (saveCbeBtn) {
+
+        saveCbeBtn.addEventListener(
+            "click",
+            async function () {
+
+                const input =
+                    document.getElementById(
+                        "cbeInput"
+                    );
+
+                const number =
+                    input.value.trim();
+
+
+                if (
+                    !/^1000\d{9}$/.test(
+                        number
+                    )
+                ) {
+
+                    showMessage(
+                        "CBE must be 13 digits and start with 1000."
+                    );
+
+                    return;
+                }
+
+
+                await saveWallet(
+                    "CBE",
+                    number
+                );
+
+
+                input.value = "";
+
+            }
+        );
+
+    }
+
+
+    const saveTelebirrBtn =
+        document.getElementById(
+            "saveTelebirrBtn"
+        );
+
+
+    if (saveTelebirrBtn) {
+
+        saveTelebirrBtn.addEventListener(
+            "click",
+            async function () {
+
+                const input =
+                    document.getElementById(
+                        "telebirrInput"
+                    );
+
+                const number =
+                    input.value.trim();
+
+
+                if (
+                    !/^09\d{8}$/.test(
+                        number
+                    )
+                ) {
+
+                    showMessage(
+                        "Telebirr must be 10 digits and start with 09."
+                    );
+
+                    return;
+                }
+
+
+                await saveWallet(
+                    "Telebirr",
+                    number
+                );
+
+
+                input.value = "";
+
+            }
+        );
+
+    }
+
+
+    /* ==============================
+       WITHDRAW WALLETS
+    ============================== */
+
+    function renderWithdrawWallets() {
+
+        const box =
+            document.getElementById(
+                "withdrawWalletBox"
+            );
+
+
+        if (!box) return;
+
+
+        if (
+            !appData.cbe &&
+            !appData.telebirr
+        ) {
+
+            box.innerHTML =
+                '<div class="muted">' +
+                'No wallet saved. Please add a wallet first.' +
+                '</div>';
+
+            return;
+        }
+
+
+        if (
+            appData.cbe &&
+            appData.telebirr
+        ) {
+
+            box.innerHTML =
+                '<div class="muted">Choose withdrawal wallet:</div>' +
+
+                '<label class="wallet-box">' +
+                '<input type="radio" name="withdrawWallet" value="CBE">' +
+                ' 🏦 CBE ' +
+                escapeHtml(appData.cbe) +
+                '</label>' +
+
+                '<label class="wallet-box">' +
+                '<input type="radio" name="withdrawWallet" value="Telebirr">' +
+                ' 📱 Telebirr ' +
+                escapeHtml(appData.telebirr) +
+                '</label>';
+
+            return;
+        }
+
+
+        if (appData.cbe) {
+
+            box.innerHTML =
+                '<div class="wallet-box">' +
+                '🏦 CBE ' +
+                escapeHtml(appData.cbe) +
+                '<input type="hidden" id="autoWithdrawWallet" value="CBE">' +
+                '</div>';
+
+            return;
+        }
+
+
+        if (appData.telebirr) {
+
+            box.innerHTML =
+                '<div class="wallet-box">' +
+                '📱 Telebirr ' +
+                escapeHtml(appData.telebirr) +
+                '<input type="hidden" id="autoWithdrawWallet" value="Telebirr">' +
+                '</div>';
+
+        }
+
+    }
+
+
+    /* ==============================
+       WITHDRAW
+    ============================== */
+
+    const withdrawBtn =
+        document.getElementById(
+            "withdrawBtn"
+        );
+
+
+    if (withdrawBtn) {
+
+        withdrawBtn.addEventListener(
+            "click",
+            async function () {
+
+                const amountInput =
+                    document.getElementById(
+                        "withdrawAmount"
+                    );
+
+
+                const amount =
+                    Number(
+                        amountInput.value
+                    );
+
+
+                if (
+                    !Number.isFinite(amount) ||
+                    amount < 30
+                ) {
+
+                    showMessage(
+                        "Minimum withdrawal is 30 ETB."
+                    );
+
+                    return;
+                }
+
+
+                let walletType = "";
+
+
+                const radio =
+                    document.querySelector(
+                        'input[name="withdrawWallet"]:checked'
+                    );
+
+
+                if (radio) {
+
+                    walletType =
+                        radio.value;
+
+                }
+
+
+                const auto =
+                    document.getElementById(
+                        "autoWithdrawWallet"
+                    );
+
+
+                if (
+                    !walletType &&
+                    auto
+                ) {
+
+                    walletType =
+                        auto.value;
+
+                }
+
+
+                if (!walletType) {
+
+                    showMessage(
+                        "Please choose a wallet."
+                    );
+
+                    return;
+                }
+
+
+                withdrawBtn.disabled =
+                    true;
+
+                withdrawBtn.textContent =
+                    "Processing...";
+
+
+                try {
+
+                    const data =
+                        await api(
+                            "/api/withdraw",
+                            {
+                                method: "POST",
+                                body: JSON.stringify({
+                                    amount: amount,
+                                    wallet_type:
+                                        walletType
+                                })
+                            }
+                        );
+
+
+                    if (
+                        typeof data.balance !==
+                        "undefined"
+                    ) {
+
+                        appData.balance =
+                            Number(
+                                data.balance
+                            );
+
+                    } else {
+
+                        appData.balance -=
+                            amount;
+
+                    }
+
+
+                    updateBalanceUI();
+
+
+                    amountInput.value =
+                        "";
+
+
+                    showMessage(
+                        data.message ||
+                        "Withdrawal request submitted."
+                    );
+
+
+                    loadWithdrawHistory();
+
+
+                } catch (e) {
+
+                    showMessage(
+                        e.message
+                    );
+
+                }
+
+
+                withdrawBtn.disabled =
+                    false;
+
+                withdrawBtn.textContent =
+                    "💸 Request Withdrawal";
+
+            }
+        );
+
+    }
+
+
+    /* ==============================
+       WITHDRAW HISTORY
+    ============================== */
+
+    async function loadWithdrawHistory() {
+
+        const container =
+            document.getElementById(
+                "withdrawHistory"
+            );
+
+
+        if (!container) return;
+
+
+        try {
+
+            const data =
+                await api(
+                    "/api/withdrawals"
+                );
+
+
+            const rows =
+                data.withdrawals ||
+                data.items ||
+                [];
+
+
+            if (!rows.length) {
+
+                container.innerHTML =
+                    '<div class="empty">' +
+                    'No withdrawal history yet.' +
+                    '</div>';
+
+                return;
+            }
+
+
+            container.innerHTML =
+                rows.map(function (item) {
+
+                    const status =
+                        String(
+                            item.status || ""
+                        );
+
+
+                    return (
+                        '<div class="task-card">' +
+
+                        '<div>' +
+                        '<b>' +
+                        escapeHtml(
+                            item.wallet_type || ""
+                        ) +
+                        '</b>' +
+                        '</div>' +
+
+                        '<div class="task-reward">' +
+                        Number(
+                            item.amount || 0
+                        ).toFixed(2) +
+                        ' ETB' +
+                        '</div>' +
+
+                        '<div class="task-description">' +
+                        'Status: ' +
+                        escapeHtml(status) +
+                        '<br>' +
+                        'Wallet: ' +
+                        escapeHtml(
+                            item.wallet_number || ""
+                        ) +
+                        '<br>' +
+                        escapeHtml(
+                            item.created_at || ""
+                        ) +
+                        '</div>' +
+
+                        '</div>'
+                    );
+
+                }).join("");
+
+
+        } catch (e) {
+
+            container.innerHTML =
+                '<div class="empty">' +
+                escapeHtml(
+                    e.message
+                ) +
+                '</div>';
+
+        }
+
+    }
+
+
+    /* ==============================
+       TASKS
+    ============================== */
+
+    async function loadTasks() {
+
+        const container =
+            document.getElementById(
+                "tasksContainer"
+            );
+
+
+        if (!container) return;
+
+
+        try {
+
+            const data =
+                await api(
+                    "/api/tasks"
+                );
+
+
+            const tasks =
+                data.tasks || [];
+
+
+            if (!tasks.length) {
+
+                container.innerHTML =
+                    '<div class="card">' +
+                    '<div class="empty">' +
+                    '🚀 Coming Soon' +
+                    '<br><br>' +
+                    '<span class="muted">' +
+                    'New tasks will be available soon. Stay tuned!' +
+                    '</span>' +
+                    '</div>' +
+                    '</div>';
+
+                return;
+            }
+
+
+            container.innerHTML =
+                tasks.map(function (task) {
+
+                    const status =
+                        task.status || "available";
+
+
+                    let buttonText =
+                        "Open Task";
+
+
+                    if (
+                        status === "submitted"
+                    ) {
+
+                        buttonText =
+                            "Proof Submitted";
+
+                    } else if (
+                        status === "approved" ||
+                        task.paid
+                    ) {
+
+                        buttonText =
+                            "✓ Completed";
+
+                    }
+
+
+                    return (
+                        '<div class="card task-card">' +
+
+                        '<div class="task-title">' +
+                        escapeHtml(
+                            task.title || "Task"
+                        ) +
+                        '</div>' +
+
+                        '<div class="task-reward">' +
+                        '+' +
+                        Number(
+                            task.reward || 0
+                        ).toFixed(2) +
+                        ' ETB' +
+                        '</div>' +
+
+                        '<div class="task-description">' +
+                        escapeHtml(
+                            task.description || ""
+                        ) +
+                        '</div>' +
+
+                        (
+                            task.channel_url
+                            ?
+                            '<button class="action-btn" style="width:100%; margin-top:12px;" onclick="openTelegramUrl(\'' +
+                            safeJs(
+                                task.channel_url
+                            ) +
+                            '\')">' +
+                            '📲 Open Task' +
+                            '</button>'
+                            :
+                            ''
+                        ) +
+
+                        (
+                            status === "available"
+                            ?
+                            '<button class="action-btn secondary task-proof-btn" data-task-id="' +
+                            Number(task.id) +
+                            '" style="width:100%; margin-top:8px;">' +
+                            '📤 Submit Proof' +
+                            '</button>'
+                            :
+                            '<div class="status warning" style="margin-top:10px;">' +
+                            escapeHtml(
+                                buttonText
+                            ) +
+                            '</div>'
+                        ) +
+
+                        '</div>'
+                    );
+
+                }).join("");
+
+
+            document
+                .querySelectorAll(
+                    ".task-proof-btn"
+                )
+                .forEach(function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            submitTaskProof(
+                                button.getAttribute(
+                                    "data-task-id"
+                                )
+                            );
+
+                        }
+                    );
+
+                });
+
+
+        } catch (e) {
+
+            container.innerHTML =
+                '<div class="card">' +
+                '<div class="empty">' +
+                escapeHtml(
+                    e.message
+                ) +
+                '</div>' +
+                '</div>';
+
+        }
+
+    }
+
+
+    /* ==============================
+       TASK PROOF
+    ============================== */
+
+    async function submitTaskProof(
+        taskId
+    ) {
+
+        const proof =
+            prompt(
+                "Paste proof text or screenshot description:"
+            );
+
+
+        if (!proof) {
+
+            showMessage(
+                "Proof submission cancelled."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            const data =
+                await api(
+                    "/api/tasks/" +
+                    taskId +
+                    "/submit",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            proof_text: proof
+                        })
+                    }
+                );
+
+
+            showMessage(
+                data.message ||
+                "Proof submitted for review."
+            );
+
+
+            loadTasks();
+
+
+        } catch (e) {
+
+            showMessage(
+                e.message
+            );
+
+        }
+
+    }
+
+
+    /* ==============================
+       SERVICES
+    ============================== */
+
+    document
+        .querySelectorAll(
+            ".service-btn"
+        )
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const service =
+                        button.getAttribute(
+                            "data-service"
+                        );
+
+
+                    const text =
+                        "Hello, I need help with: " +
+                        service;
+
+
+                    const url =
+                        "https://t.me/Aman_M12?text=" +
+                        encodeURIComponent(
+                            text
+                        );
+
+
+                    openTelegramUrl(url);
+
+                }
+            );
+
+        });
+
+
+    /* ==============================
+       REFERRAL COPY
+    ============================== */
 
     const copyBtn =
-        document.getElementById("copyBtn");
+        document.getElementById(
+            "copyBtn"
+        );
 
 
     if (copyBtn) {
@@ -994,7 +2432,9 @@
 
                 if (
                     !text ||
-                    text.startsWith("Open this")
+                    text.startsWith(
+                        "Open this"
+                    )
                 ) {
 
                     showMessage(
@@ -1018,7 +2458,7 @@
                 } catch (e) {
 
                     showMessage(
-                        "Copy failed. Please copy the link manually."
+                        "Copy failed."
                     );
 
                 }
@@ -1029,12 +2469,14 @@
     }
 
 
-    /* --------------------------------
+    /* ==============================
        SHARE
-    -------------------------------- */
+    ============================== */
 
     const shareBtn =
-        document.getElementById("shareBtn");
+        document.getElementById(
+            "shareBtn"
+        );
 
 
     if (shareBtn) {
@@ -1049,7 +2491,9 @@
 
                 if (
                     !link ||
-                    link.startsWith("Open this")
+                    link.startsWith(
+                        "Open this"
+                    )
                 ) {
 
                     showMessage(
@@ -1069,137 +2513,282 @@
                     );
 
 
-                if (tg) {
+                openTelegramUrl(
+                    shareUrl
+                );
 
-                    try {
+            }
+        );
 
-                        tg.openTelegramLink(
-                            shareUrl
-                        );
+    }
 
-                        return;
 
-                    } catch (e) {
-                        console.log(e);
-                    }
+    /* ==============================
+       NAVIGATION
+    ============================== */
+
+    function openPage(pageId) {
+
+        pages.forEach(
+            function (page) {
+                page.classList.remove(
+                    "active"
+                );
+            }
+        );
+
+
+        const target =
+            document.getElementById(
+                pageId
+            );
+
+
+        if (!target) return;
+
+
+        target.classList.add(
+            "active"
+        );
+
+
+        currentPage =
+            pageId;
+
+
+        if (tg) {
+
+            try {
+
+                if (
+                    pageId ===
+                    "homePage"
+                ) {
+
+                    tg.BackButton.hide();
+
+                } else {
+
+                    tg.BackButton.show();
 
                 }
 
+            } catch (e) {}
 
-                window.open(
-                    shareUrl,
-                    "_blank"
-                );
-
-            }
-        );
-
-    }
+        }
 
 
-    /* --------------------------------
-       WALLET
-    -------------------------------- */
+        if (
+            pageId ===
+            "bonusPage"
+        ) {
 
-    const walletManageBtn =
-        document.getElementById(
-            "walletManageBtn"
-        );
+            loadBonusStatus();
 
-
-    if (walletManageBtn) {
-
-        walletManageBtn.addEventListener(
-            "click",
-            function () {
-
-                showMessage(
-                    "Wallet management will be connected next."
-                );
-
-            }
-        );
-
-    }
+        }
 
 
-    /* --------------------------------
-       WITHDRAW
-    -------------------------------- */
+        if (
+            pageId ===
+            "referralPage"
+        ) {
 
-    const withdrawBtn =
-        document.getElementById(
-            "withdrawBtn"
-        );
+            loadReferral();
+
+        }
 
 
-    if (withdrawBtn) {
+        if (
+            pageId ===
+            "tasksPage"
+        ) {
 
-        withdrawBtn.addEventListener(
-            "click",
-            function () {
+            loadTasks();
 
-                showMessage(
-                    "Withdrawal system will be connected next."
-                );
+        }
 
-            }
-        );
+
+        if (
+            pageId ===
+            "walletPage"
+        ) {
+
+            loadUser();
+
+        }
+
+
+        if (
+            pageId ===
+            "withdrawPage"
+        ) {
+
+            loadUser();
+            loadWithdrawHistory();
+
+        }
 
     }
 
 
-    /* --------------------------------
-       SUPPORT
-    -------------------------------- */
+    document
+        .querySelectorAll(
+            ".menu-btn"
+        )
+        .forEach(function (button) {
 
-    const supportBtn =
-        document.getElementById(
-            "supportBtn"
-        );
+            button.addEventListener(
+                "click",
+                function () {
 
-
-    if (supportBtn) {
-
-        supportBtn.addEventListener(
-            "click",
-            function () {
-
-                const url =
-                    "https://t.me/Aman_M12";
-
-
-                if (tg) {
-
-                    try {
-
-                        tg.openTelegramLink(
-                            url
-                        );
-
-                        return;
-
-                    } catch (e) {
-                        console.log(e);
-                    }
+                    openPage(
+                        button.getAttribute(
+                            "data-page"
+                        )
+                    );
 
                 }
+            );
+
+        });
 
 
-                window.open(
-                    url,
-                    "_blank"
-                );
+    document
+        .querySelectorAll(
+            "[data-back]"
+        )
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    openPage(
+                        "homePage"
+                    );
+
+                }
+            );
+
+        });
+
+
+    if (tg) {
+
+        try {
+
+            tg.BackButton.onClick(
+                function () {
+
+                    openPage(
+                        "homePage"
+                    );
+
+                }
+            );
+
+        } catch (e) {}
+
+    }
+
+
+    /* ==============================
+       TELEGRAM URL
+    ============================== */
+
+    window.openTelegramUrl =
+        function (url) {
+
+            if (tg) {
+
+                try {
+
+                    tg.openTelegramLink(
+                        url
+                    );
+
+                    return;
+
+                } catch (e) {}
 
             }
+
+
+            window.open(
+                url,
+                "_blank"
+            );
+
+        };
+
+
+    /* ==============================
+       ESCAPE
+    ============================== */
+
+    function escapeHtml(value) {
+
+        return String(
+            value == null
+                ? ""
+                : value
+        )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
         );
 
     }
 
 
-    /* --------------------------------
+    function safeJs(value) {
+
+        return String(
+            value || ""
+        )
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+        .replace(
+            /'/g,
+            "\\'"
+        )
+        .replace(
+            /"/g,
+            '\\"'
+        )
+        .replace(
+            /\n/g,
+            "\\n"
+        )
+        .replace(
+            /\r/g,
+            "\\r"
+        );
+
+    }
+
+
+    /* ==============================
        THEME
-    -------------------------------- */
+    ============================== */
 
     function applyTelegramTheme() {
 
@@ -1231,25 +2820,24 @@
 
             }
 
-        } catch (e) {
-            console.log(
-                "Theme error:",
-                e
-            );
-        }
+        } catch (e) {}
 
     }
 
 
-    /* --------------------------------
-       INITIALIZE
-    -------------------------------- */
+    /* ==============================
+       START
+    ============================== */
 
-    setupUser();
+    setupUserDisplay();
+
     applyTelegramTheme();
 
-    openPage("homePage");
+    openPage(
+        "homePage"
+    );
 
+    loadUser();
 
 })();
 </script>
