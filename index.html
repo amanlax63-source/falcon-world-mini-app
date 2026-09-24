@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-  <title>Falcon World</title>
-
-  <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
-
-  <style>
+  <meta name="theme-color" content="#07111f">  <title>Falcon World</title>  <!-- Telegram Mini App -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
     * {
       box-sizing: border-box;
       margin: 0;
@@ -17,35 +11,53 @@
     }
 
     :root {
-      --bg: var(--tg-theme-bg-color, #07111f);
-      --card: var(--tg-theme-secondary-bg-color, #101d2e);
-      --text: var(--tg-theme-text-color, #ffffff);
-      --hint: var(--tg-theme-hint-color, #8b9bb0);
-      --button: var(--tg-theme-button-color, #2481cc);
-      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --bg: #07111f;
+      --card: #101d2e;
+      --text: #ffffff;
+      --hint: #8b9bb0;
+      --button: #2481cc;
+      --button-text: #ffffff;
       --line: rgba(255,255,255,0.08);
       --gold: #f6c453;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
     }
 
     body {
       font-family: Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top right, rgba(36,129,204,.20), transparent 35%),
+        radial-gradient(
+          circle at top right,
+          rgba(36,129,204,.20),
+          transparent 35%
+        ),
         var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 18px 15px 30px;
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        15px
+        calc(30px + env(safe-area-inset-bottom));
+    }
+
+    button {
+      font-family: inherit;
     }
 
     .app {
+      width: 100%;
       max-width: 600px;
-      margin: auto;
+      margin: 0 auto;
     }
 
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
@@ -53,11 +65,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
 
     .logo {
       width: 52px;
       height: 52px;
+      min-width: 52px;
       border-radius: 16px;
       display: flex;
       align-items: center;
@@ -80,11 +94,16 @@
 
     .user {
       text-align: right;
+      min-width: 0;
     }
 
     .user-name {
       font-size: 13px;
       font-weight: 700;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .user-id {
@@ -99,7 +118,12 @@
       padding: 23px;
       border-radius: 23px;
       margin-bottom: 18px;
-      background: linear-gradient(135deg, #1769aa, #2481cc 55%, #36a8ff);
+      background: linear-gradient(
+        135deg,
+        #1769aa,
+        #2481cc 55%,
+        #36a8ff
+      );
       box-shadow: 0 12px 35px rgba(36,129,204,.25);
     }
 
@@ -139,18 +163,21 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 11px;
     }
 
     .card {
       border: 1px solid var(--line);
       background: var(--card);
+      color: var(--text);
       border-radius: 18px;
       padding: 17px 15px;
       min-height: 105px;
       cursor: pointer;
       transition: transform .12s ease;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .card:active {
@@ -172,28 +199,6 @@
       font-size: 11px;
       margin-top: 5px;
       line-height: 1.4;
-    }
-
-    .verify {
-      margin-top: 16px;
-      border: 1px solid rgba(246,196,83,.20);
-      background: rgba(246,196,83,.08);
-      border-radius: 18px;
-      padding: 15px;
-      display: none;
-    }
-
-    .verify-title {
-      font-weight: 800;
-      font-size: 14px;
-      color: var(--gold);
-    }
-
-    .verify-text {
-      color: var(--hint);
-      font-size: 11px;
-      line-height: 1.5;
-      margin-top: 5px;
     }
 
     .page {
@@ -239,6 +244,7 @@
     .info-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 15px;
       padding: 10px 0;
       border-bottom: 1px solid var(--line);
@@ -264,6 +270,11 @@
       font-weight: 800;
       cursor: pointer;
       margin-top: 8px;
+      min-height: 46px;
+    }
+
+    .primary:active {
+      opacity: .85;
     }
 
     .ref-link {
@@ -282,7 +293,20 @@
       color: var(--hint);
       font-size: 10px;
       margin-top: 25px;
+      padding-bottom: 5px;
       opacity: .7;
+    }
+
+    .status {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--hint);
+      text-align: center;
     }
 
     @media (max-width: 380px) {
@@ -297,453 +321,965 @@
       .balance {
         font-size: 30px;
       }
+
+      .header {
+        align-items: flex-start;
+      }
+
+      .logo {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+      }
     }
-  </style>
-</head>
+  </style></head><body><div class="app">  <div id="status" class="status">
+    Falcon World is loading...
+  </div>  <!-- HOME -->  <section id="homePage" class="page active"><div class="header">
 
-<body>
+  <div class="brand">
 
-<div class="app">
+    <div class="logo">🦅</div>
 
-  <!-- HOME -->
-  <section id="homePage" class="page active">
-
-    <div class="header">
-      <div class="brand">
-        <div class="logo">🦅</div>
-
-        <div>
-          <h1>Falcon World</h1>
-          <p>Smart • Simple • Rewards</p>
-        </div>
-      </div>
-
-      <div class="user">
-        <div id="userName" class="user-name">User</div>
-        <div id="userId" class="user-id">ID: —</div>
-      </div>
+    <div>
+      <h1>Falcon World</h1>
+      <p>Smart • Simple • Rewards</p>
     </div>
 
-    <div class="balance-card">
-      <div class="balance-label">Available Balance</div>
-      <div id="balance" class="balance">0.00 ETB</div>
-      <div class="balance-sub">Your Falcon World earnings</div>
-    </div>
-
-    <div class="section-title">Your Account</div>
-
-    <div class="grid">
-
-      <div class="card" onclick="openPage('balancePage')">
-        <div class="icon">💰</div>
-        <div class="card-title">Balance</div>
-        <div class="card-text">View your earnings</div>
-      </div>
-
-      <div class="card" onclick="openPage('referralPage')">
-        <div class="icon">👥</div>
-        <div class="card-title">Referral</div>
-        <div class="card-text">Invite friends & earn</div>
-      </div>
-
-      <div class="card" onclick="openPage('tasksPage')">
-        <div class="icon">🎯</div>
-        <div class="card-title">Tasks</div>
-        <div class="card-text">Complete available tasks</div>
-      </div>
-
-      <div class="card" onclick="openPage('walletPage')">
-        <div class="icon">💳</div>
-        <div class="card-title">Wallet</div>
-        <div class="card-text">Manage your wallet</div>
-      </div>
-
-      <div class="card" onclick="openPage('withdrawPage')">
-        <div class="icon">💸</div>
-        <div class="card-title">Withdraw</div>
-        <div class="card-text">Request your payment</div>
-      </div>
-
-      <div class="card" onclick="openPage('supportPage')">
-        <div class="icon">📞</div>
-        <div class="card-title">Support</div>
-        <div class="card-text">Get help from admin</div>
-      </div>
-
-    </div>
-
-    <div id="verifyBox" class="verify">
-      <div class="verify-title">🔐 Channel Verification</div>
-      <div class="verify-text">
-        Join all required channels from the bot, then return here and verify your account.
-      </div>
-    </div>
-
-    <div class="footer">
-      Falcon World © 2026
-    </div>
-
-  </section>
-
-
-  <!-- BALANCE -->
-  <section id="balancePage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">💰 Balance</div>
-
-    <div class="page-sub">
-      Your current Falcon World account information.
-    </div>
-
-    <div class="info-box">
-
-      <div class="info-row">
-        <span class="muted">Available Balance</span>
-        <strong id="balance2">0.00 ETB</strong>
-      </div>
-
-      <div class="info-row">
-        <span class="muted">Successful Referrals</span>
-        <strong id="refCount">0</strong>
-      </div>
-
-      <div class="info-row">
-        <span class="muted">Minimum Withdrawal</span>
-        <strong>30 ETB</strong>
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- REFERRAL -->
-  <section id="referralPage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">👥 Referral</div>
-
-    <div class="page-sub">
-      Invite your friends using your personal referral link.
-    </div>
-
-    <div class="info-box">
-
-      <div class="info-row">
-        <span class="muted">Successful Referrals</span>
-        <strong id="refCount2">0</strong>
-      </div>
-
-      <div class="info-row">
-        <span class="muted">Reward</span>
-        <strong>1 – 5 ETB</strong>
-      </div>
-
-      <div class="ref-link" id="refLink">
-        Loading referral link...
-      </div>
-
-      <button class="primary" onclick="copyReferral()">
-        📋 Copy Referral Link
-      </button>
-
-      <button class="primary" onclick="shareReferral()">
-        🚀 Share Referral
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- TASKS -->
-  <section id="tasksPage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">🎯 Tasks</div>
-
-    <div class="page-sub">
-      Available tasks will appear here.
-    </div>
-
-    <div class="info-box">
-      <div style="font-size:30px;">📋</div>
-      <div style="font-weight:800;margin-top:8px;">
-        No tasks loaded yet
-      </div>
-      <div class="muted" style="font-size:12px;margin-top:5px;">
-        Tasks will be connected to your existing bot system.
-      </div>
-    </div>
-
-  </section>
-
-
-  <!-- WALLET -->
-  <section id="walletPage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">💳 Wallet</div>
-
-    <div class="page-sub">
-      Your CBE and Telebirr wallet information.
-    </div>
-
-    <div class="info-box">
-
-      <div class="info-row">
-        <span class="muted">CBE</span>
-        <strong id="cbeWallet">Not added</strong>
-      </div>
-
-      <div class="info-row">
-        <span class="muted">Telebirr</span>
-        <strong id="telebirrWallet">Not added</strong>
-      </div>
-
-      <button class="primary" onclick="showMessage('Wallet management will be connected to the bot backend.')">
-        ⚙️ Manage Wallet
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- WITHDRAW -->
-  <section id="withdrawPage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">💸 Withdraw</div>
-
-    <div class="page-sub">
-      Request a withdrawal when your balance reaches the minimum amount.
-    </div>
-
-    <div class="info-box">
-
-      <div class="info-row">
-        <span class="muted">Balance</span>
-        <strong id="withdrawBalance">0.00 ETB</strong>
-      </div>
-
-      <div class="info-row">
-        <span class="muted">Minimum</span>
-        <strong>30 ETB</strong>
-      </div>
-
-      <button class="primary" onclick="showMessage('Withdrawal will be connected to your existing bot backend.')">
-        💸 Request Withdrawal
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- SUPPORT -->
-  <section id="supportPage" class="page">
-
-    <button class="back" onclick="goHome()">← Back</button>
-
-    <div class="page-title">📞 Support</div>
-
-    <div class="page-sub">
-      Need help? Contact Falcon World support.
-    </div>
-
-    <div class="info-box">
-
-      <div class="info-row">
-        <span class="muted">Support</span>
-        <strong>@Aman_M12</strong>
-      </div>
-
-      <button class="primary" onclick="openSupport()">
-        💬 Contact Support
-      </button>
-
-    </div>
-
-  </section>
+  </div>
+
+  <div class="user">
+    <div id="userName" class="user-name">User</div>
+    <div id="userId" class="user-id">ID: —</div>
+  </div>
 
 </div>
 
+<div class="balance-card">
 
-<script>
-  const tg = window.Telegram && window.Telegram.WebApp;
+  <div class="balance-label">
+    Available Balance
+  </div>
 
-  if (tg) {
-    tg.ready();
-    tg.expand();
+  <div id="balance" class="balance">
+    0.00 ETB
+  </div>
+
+  <div class="balance-sub">
+    Your Falcon World earnings
+  </div>
+
+</div>
+
+<div class="section-title">
+  Your Account
+</div>
+
+<div class="grid">
+
+  <div class="card" onclick="openPage('balancePage')">
+    <div class="icon">💰</div>
+    <div class="card-title">Balance</div>
+    <div class="card-text">
+      View your earnings
+    </div>
+  </div>
+
+  <div class="card" onclick="openPage('referralPage')">
+    <div class="icon">👥</div>
+    <div class="card-title">Referral</div>
+    <div class="card-text">
+      Invite friends & earn
+    </div>
+  </div>
+
+  <div class="card" onclick="openPage('tasksPage')">
+    <div class="icon">🎯</div>
+    <div class="card-title">Tasks</div>
+    <div class="card-text">
+      Complete available tasks
+    </div>
+  </div>
+
+  <div class="card" onclick="openPage('walletPage')">
+    <div class="icon">💳</div>
+    <div class="card-title">Wallet</div>
+    <div class="card-text">
+      Manage your wallet
+    </div>
+  </div>
+
+  <div class="card" onclick="openPage('withdrawPage')">
+    <div class="icon">💸</div>
+    <div class="card-title">Withdraw</div>
+    <div class="card-text">
+      Request your payment
+    </div>
+  </div>
+
+  <div class="card" onclick="openPage('supportPage')">
+    <div class="icon">📞</div>
+    <div class="card-title">Support</div>
+    <div class="card-text">
+      Get help from admin
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Falcon World © 2026
+</div>
+
+  </section>  <!-- BALANCE -->  <section id="balancePage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  💰 Balance
+</div>
+
+<div class="page-sub">
+  Your current Falcon World account information.
+</div>
+
+<div class="info-box">
+
+  <div class="info-row">
+    <span class="muted">
+      Available Balance
+    </span>
+
+    <strong id="balance2">
+      0.00 ETB
+    </strong>
+  </div>
+
+  <div class="info-row">
+    <span class="muted">
+      Successful Referrals
+    </span>
+
+    <strong id="refCount">
+      0
+    </strong>
+  </div>
+
+  <div class="info-row">
+    <span class="muted">
+      Minimum Withdrawal
+    </span>
+
+    <strong>
+      30 ETB
+    </strong>
+  </div>
+
+</div>
+
+  </section>  <!-- REFERRAL -->  <section id="referralPage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  👥 Referral
+</div>
+
+<div class="page-sub">
+  Invite your friends using your personal referral link.
+</div>
+
+<div class="info-box">
+
+  <div class="info-row">
+    <span class="muted">
+      Successful Referrals
+    </span>
+
+    <strong id="refCount2">
+      0
+    </strong>
+  </div>
+
+  <div class="info-row">
+    <span class="muted">
+      Reward
+    </span>
+
+    <strong>
+      1 – 5 ETB
+    </strong>
+  </div>
+
+  <div class="ref-link" id="refLink">
+    Loading referral link...
+  </div>
+
+  <button class="primary" onclick="copyReferral()">
+    📋 Copy Referral Link
+  </button>
+
+  <button class="primary" onclick="shareReferral()">
+    🚀 Share Referral
+  </button>
+
+</div>
+
+  </section>  <!-- TASKS -->  <section id="tasksPage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  🎯 Tasks
+</div>
+
+<div class="page-sub">
+  Available tasks will appear here.
+</div>
+
+<div class="info-box">
+
+  <div style="font-size:30px;">
+    📋
+  </div>
+
+  <div style="font-weight:800;margin-top:8px;">
+    No tasks loaded yet
+  </div>
+
+  <div class="muted" style="font-size:12px;margin-top:5px;">
+    Tasks will be connected to your existing bot system.
+  </div>
+
+</div>
+
+  </section>  <!-- WALLET -->  <section id="walletPage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  💳 Wallet
+</div>
+
+<div class="page-sub">
+  Your CBE and Telebirr wallet information.
+</div>
+
+<div class="info-box">
+
+  <div class="info-row">
+    <span class="muted">
+      CBE
+    </span>
+
+    <strong id="cbeWallet">
+      Not added
+    </strong>
+  </div>
+
+  <div class="info-row">
+    <span class="muted">
+      Telebirr
+    </span>
+
+    <strong id="telebirrWallet">
+      Not added
+    </strong>
+  </div>
+
+  <button
+    class="primary"
+    onclick="showMessage('Wallet management will be connected to the bot backend.')">
+
+    ⚙️ Manage Wallet
+
+  </button>
+
+</div>
+
+  </section>  <!-- WITHDRAW -->  <section id="withdrawPage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  💸 Withdraw
+</div>
+
+<div class="page-sub">
+  Request a withdrawal when your balance reaches the minimum amount.
+</div>
+
+<div class="info-box">
+
+  <div class="info-row">
+    <span class="muted">
+      Balance
+    </span>
+
+    <strong id="withdrawBalance">
+      0.00 ETB
+    </strong>
+  </div>
+
+  <div class="info-row">
+    <span class="muted">
+      Minimum
+    </span>
+
+    <strong>
+      30 ETB
+    </strong>
+  </div>
+
+  <button
+    class="primary"
+    onclick="showMessage('Withdrawal will be connected to your existing bot backend.')">
+
+    💸 Request Withdrawal
+
+  </button>
+
+</div>
+
+  </section>  <!-- SUPPORT -->  <section id="supportPage" class="page"><button class="back" onclick="goHome()">
+  ← Back
+</button>
+
+<div class="page-title">
+  📞 Support
+</div>
+
+<div class="page-sub">
+  Need help? Contact Falcon World support.
+</div>
+
+<div class="info-box">
+
+  <div class="info-row">
+    <span class="muted">
+      Support
+    </span>
+
+    <strong>
+      @Aman_M12
+    </strong>
+  </div>
+
+  <button class="primary" onclick="openSupport()">
+    💬 Contact Support
+  </button>
+
+</div>
+
+  </section></div><script>
+
+(function () {
+
+  "use strict";
+
+  /* =========================================
+     TELEGRAM MINI APP INITIALIZATION
+  ========================================= */
+
+  const tg =
+    window.Telegram &&
+    window.Telegram.WebApp
+      ? window.Telegram.WebApp
+      : null;
+
+
+  function safeReady() {
+
+    if (!tg) {
+      return;
+    }
+
+    try {
+      if (typeof tg.ready === "function") {
+        tg.ready();
+      }
+    } catch (error) {
+      console.log("Telegram ready error:", error);
+    }
+
   }
 
+
+  function safeExpand() {
+
+    if (!tg) {
+      return;
+    }
+
+    try {
+      if (typeof tg.expand === "function") {
+        tg.expand();
+      }
+    } catch (error) {
+      console.log("Telegram expand error:", error);
+    }
+
+  }
+
+
+  safeReady();
+  safeExpand();
+
+
+  /* =========================================
+     TELEGRAM USER
+  ========================================= */
+
   function getTelegramUser() {
-    if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+
+    if (
+      !tg ||
+      !tg.initDataUnsafe ||
+      !tg.initDataUnsafe.user
+    ) {
       return null;
     }
 
     return tg.initDataUnsafe.user;
+
   }
 
+
   function setupUser() {
+
     const user = getTelegramUser();
 
+    const userNameElement =
+      document.getElementById("userName");
+
+    const userIdElement =
+      document.getElementById("userId");
+
+    const refLinkElement =
+      document.getElementById("refLink");
+
+
     if (!user) {
-      document.getElementById("userName").textContent = "Telegram User";
-      document.getElementById("userId").textContent = "ID: —";
+
+      userNameElement.textContent =
+        "Telegram User";
+
+      userIdElement.textContent =
+        "ID: —";
+
+      refLinkElement.textContent =
+        "Open this app from Telegram to get your referral link.";
+
+      return;
+
+    }
+
+
+    const name =
+      [
+        user.first_name,
+        user.last_name
+      ]
+      .filter(Boolean)
+      .join(" ")
+      || "User";
+
+
+    userNameElement.textContent =
+      name;
+
+    userIdElement.textContent =
+      "ID: " + user.id;
+
+
+    const referralLink =
+      "https://t.me/FalconWorld_Bot?start=" +
+      encodeURIComponent(user.id);
+
+
+    refLinkElement.textContent =
+      referralLink;
+
+  }
+
+
+  /* =========================================
+     PAGE NAVIGATION
+  ========================================= */
+
+  window.openPage = function (pageId) {
+
+    const pages =
+      document.querySelectorAll(".page");
+
+
+    pages.forEach(function (page) {
+
+      page.classList.remove("active");
+
+    });
+
+
+    const selected =
+      document.getElementById(pageId);
+
+
+    if (selected) {
+
+      selected.classList.add("active");
+
+    }
+
+
+    if (
+      tg &&
+      tg.BackButton &&
+      typeof tg.BackButton.show === "function"
+    ) {
+
+      try {
+
+        tg.BackButton.show();
+
+        tg.BackButton.onClick(goHome);
+
+      } catch (error) {
+
+        console.log(
+          "BackButton error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    window.scrollTo(0, 0);
+
+  };
+
+
+  window.goHome = function () {
+
+    const pages =
+      document.querySelectorAll(".page");
+
+
+    pages.forEach(function (page) {
+
+      page.classList.remove("active");
+
+    });
+
+
+    const home =
+      document.getElementById("homePage");
+
+
+    if (home) {
+
+      home.classList.add("active");
+
+    }
+
+
+    if (
+      tg &&
+      tg.BackButton &&
+      typeof tg.BackButton.hide === "function"
+    ) {
+
+      try {
+
+        tg.BackButton.hide();
+
+      } catch (error) {
+
+        console.log(
+          "BackButton hide error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    window.scrollTo(0, 0);
+
+  };
+
+
+  /* =========================================
+     COPY REFERRAL
+  ========================================= */
+
+  window.copyReferral = function () {
+
+    const element =
+      document.getElementById("refLink");
+
+
+    if (!element) {
       return;
     }
 
-    const name =
-      [user.first_name, user.last_name]
-        .filter(Boolean)
-        .join(" ") || "User";
 
-    document.getElementById("userName").textContent = name;
-    document.getElementById("userId").textContent = "ID: " + user.id;
+    const link =
+      element.textContent.trim();
 
-    const referralLink =
-      "https://t.me/FalconWorld_Bot?start=" + user.id;
 
-    document.getElementById("refLink").textContent = referralLink;
-  }
+    if (
+      !link ||
+      link.includes("Open this app")
+    ) {
 
-  function openPage(pageId) {
-    document.querySelectorAll(".page").forEach(page => {
-      page.classList.remove("active");
-    });
+      showMessage(
+        "Please open Falcon World from Telegram first."
+      );
 
-    document.getElementById(pageId).classList.add("active");
+      return;
 
-    if (tg && tg.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(goHome);
     }
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
 
-  function goHome() {
-    document.querySelectorAll(".page").forEach(page => {
-      page.classList.remove("active");
-    });
+    if (
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === "function"
+    ) {
 
-    document.getElementById("homePage").classList.add("active");
+      navigator.clipboard
+        .writeText(link)
+        .then(function () {
 
-    if (tg && tg.BackButton) {
-      tg.BackButton.hide();
+          showMessage(
+            "Referral link copied!"
+          );
+
+        })
+        .catch(function () {
+
+          showMessage(link);
+
+        });
+
+    } else {
+
+      showMessage(link);
+
     }
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
+  };
 
-  function copyReferral() {
-    const link = document.getElementById("refLink").textContent;
 
-    navigator.clipboard.writeText(link)
-      .then(() => {
-        showMessage("Referral link copied!");
-      })
-      .catch(() => {
-        showMessage(link);
-      });
-  }
+  /* =========================================
+     SHARE REFERRAL
+  ========================================= */
 
-  function shareReferral() {
-    const link = document.getElementById("refLink").textContent;
+  window.shareReferral = function () {
+
+    const element =
+      document.getElementById("refLink");
+
+
+    if (!element) {
+      return;
+    }
+
+
+    const link =
+      element.textContent.trim();
+
+
+    if (
+      !link ||
+      link.includes("Open this app")
+    ) {
+
+      showMessage(
+        "Please open Falcon World from Telegram first."
+      );
+
+      return;
+
+    }
+
 
     const text =
       "🦅 Join Falcon World and start earning!\n\n" +
       link;
 
-    if (tg && tg.openTelegramLink) {
-      tg.openTelegramLink(
-        "https://t.me/share/url?url=" +
-        encodeURIComponent(link) +
-        "&text=" +
-        encodeURIComponent(text)
-      );
-    } else {
+
+    const shareUrl =
+      "https://t.me/share/url?url=" +
+      encodeURIComponent(link) +
+      "&text=" +
+      encodeURIComponent(text);
+
+
+    try {
+
+      if (
+        tg &&
+        typeof tg.openTelegramLink === "function"
+      ) {
+
+        tg.openTelegramLink(shareUrl);
+
+      } else {
+
+        window.open(
+          shareUrl,
+          "_blank"
+        );
+
+      }
+
+    } catch (error) {
+
       window.open(
-        "https://t.me/share/url?url=" +
-        encodeURIComponent(link) +
-        "&text=" +
-        encodeURIComponent(text),
+        shareUrl,
         "_blank"
       );
-    }
-  }
 
-  function openSupport() {
-    if (tg && tg.openTelegramLink) {
-      tg.openTelegramLink("https://t.me/Aman_M12");
-    } else {
-      window.open("https://t.me/Aman_M12", "_blank");
     }
-  }
 
-  function showMessage(message) {
-    if (tg && tg.showAlert) {
-      tg.showAlert(message);
-    } else {
+  };
+
+
+  /* =========================================
+     SUPPORT
+  ========================================= */
+
+  window.openSupport = function () {
+
+    const supportUrl =
+      "https://t.me/Aman_M12";
+
+
+    try {
+
+      if (
+        tg &&
+        typeof tg.openTelegramLink === "function"
+      ) {
+
+        tg.openTelegramLink(
+          supportUrl
+        );
+
+      } else {
+
+        window.open(
+          supportUrl,
+          "_blank"
+        );
+
+      }
+
+    } catch (error) {
+
+      window.open(
+        supportUrl,
+        "_blank"
+      );
+
+    }
+
+  };
+
+
+  /* =========================================
+     MESSAGE
+  ========================================= */
+
+  window.showMessage = function (message) {
+
+    if (
+      tg &&
+      typeof tg.showAlert === "function"
+    ) {
+
+      try {
+
+        tg.showAlert(message);
+
+        return;
+
+      } catch (error) {
+
+        console.log(
+          "Telegram alert error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    try {
+
       alert(message);
+
+    } catch (error) {
+
+      console.log(message);
+
     }
-  }
+
+  };
+
+
+  /* =========================================
+     TELEGRAM THEME
+  ========================================= */
 
   function applyTheme() {
-    if (!tg) return;
 
-    document.documentElement.style.setProperty(
-      "--bg",
-      tg.themeParams.bg_color || "#07111f"
-    );
+    if (!tg) {
+      return;
+    }
 
-    document.documentElement.style.setProperty(
-      "--card",
-      tg.themeParams.secondary_bg_color || "#101d2e"
-    );
 
-    document.documentElement.style.setProperty(
-      "--text",
-      tg.themeParams.text_color || "#ffffff"
-    );
+    try {
 
-    document.documentElement.style.setProperty(
-      "--hint",
-      tg.themeParams.hint_color || "#8b9bb0"
-    );
+      const theme =
+        tg.themeParams || {};
 
-    document.documentElement.style.setProperty(
-      "--button",
-      tg.themeParams.button_color || "#2481cc"
-    );
 
-    document.documentElement.style.setProperty(
-      "--button-text",
-      tg.themeParams.button_text_color || "#ffffff"
-    );
+      document.documentElement.style.setProperty(
+        "--bg",
+        theme.bg_color || "#07111f"
+      );
+
+
+      document.documentElement.style.setProperty(
+        "--card",
+        theme.secondary_bg_color || "#101d2e"
+      );
+
+
+      document.documentElement.style.setProperty(
+        "--text",
+        theme.text_color || "#ffffff"
+      );
+
+
+      document.documentElement.style.setProperty(
+        "--hint",
+        theme.hint_color || "#8b9bb0"
+      );
+
+
+      document.documentElement.style.setProperty(
+        "--button",
+        theme.button_color || "#2481cc"
+      );
+
+
+      document.documentElement.style.setProperty(
+        "--button-text",
+        theme.button_text_color || "#ffffff"
+      );
+
+    } catch (error) {
+
+      console.log(
+        "Theme error:",
+        error
+      );
+
+    }
+
   }
 
-  setupUser();
-  applyTheme();
 
-  if (tg) {
-    tg.onEvent("themeChanged", applyTheme);
+  /* =========================================
+     START APP
+  ========================================= */
+
+  function initializeApp() {
+
+    try {
+
+      setupUser();
+
+      applyTheme();
+
+
+      if (
+        tg &&
+        typeof tg.onEvent === "function"
+      ) {
+
+        try {
+
+          tg.onEvent(
+            "themeChanged",
+            applyTheme
+          );
+
+        } catch (error) {
+
+          console.log(
+            "Theme event error:",
+            error
+          );
+
+        }
+
+      }
+
+
+      if (
+        tg &&
+        tg.BackButton &&
+        typeof tg.BackButton.hide === "function"
+      ) {
+
+        try {
+
+          tg.BackButton.hide();
+
+        } catch (error) {
+
+          console.log(
+            "Back button error:",
+            error
+          );
+
+        }
+
+      }
+
+
+      const status =
+        document.getElementById("status");
+
+
+      if (status) {
+
+        status.style.display = "none";
+
+      }
+
+    } catch (error) {
+
+      console.log(
+        "Falcon World initialization error:",
+        error
+      );
+
+    }
+
   }
-</script>
 
-</body>
+
+  initializeApp();
+
+
+})();
+
+</script></body>
 </html>
