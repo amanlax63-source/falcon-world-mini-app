@@ -1,29 +1,28 @@
 import os
-import json
 import sqlite3
 import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8519465007:AAE_-oyS5wuiY6Gf8Uci9CJS4NgdHo32638")
 TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
+# የአንተ ትክክለኛ 6ቱ ቻናሎች
 CHANNELS = [
-    "@EthioMakeMoneyy1",
-    "@DailyMoney444",
-    "@SmartMoneyyLab",
-    "@WorldCryptoMiner07",
-    "@DailyIncomeHub55",
+    "@Sheger_tech1",
+    "@EthioVortex1",
+    "@ethiocashflow",
+    "@AmanIncomeLab",
+    "@OnlineIncomeHub07",
     "@Paymentprooff2"
 ]
 
 DB_FILE = "database.db"
 
 # -------------------------------------------------------------
-# DATABASE SETUP (Fixing SQLite Locking Issues)
+# DATABASE SETUP
 # -------------------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_FILE, timeout=10)
@@ -42,15 +41,8 @@ def init_db():
 
 init_db()
 
-def get_db_connection():
-    # Transaction Error እንዳይፈጠር timeout እና WAL mode መጠቀም
-    conn = sqlite3.connect(DB_FILE, timeout=10)
-    conn.execute("PRAGMA journal_mode=WAL;")
-    conn.row_factory = sqlite3.Row
-    return conn
-
 # -------------------------------------------------------------
-# TELEGRAM HELPER FUNCTIONS
+# HELPER FUNCTIONS
 # -------------------------------------------------------------
 async def check_user_joined(user_id: int):
     unjoined = []
@@ -73,7 +65,7 @@ async def send_message(chat_id, text, reply_markup=None):
         await client.post(f"{TELEGRAM_API}/sendMessage", json=payload)
 
 # -------------------------------------------------------------
-# FASTAPI ROUTES & WEBHOOK
+# WEBHOOK HANDLER
 # -------------------------------------------------------------
 @app.get("/")
 def read_root():
@@ -83,7 +75,7 @@ def read_root():
 async def telegram_webhook(request: Request):
     data = await request.json()
     
-    # Message handling
+    # 1. Message Handling
     if "message" in data:
         msg = data["message"]
         chat_id = msg["chat"]["id"]
@@ -97,7 +89,7 @@ async def telegram_webhook(request: Request):
             else:
                 await send_join_buttons(chat_id, unjoined)
 
-    # Callback Query (Verify Button)
+    # 2. Callback Query (Verify Button Click)
     elif "callback_query" in data:
         cb = data["callback_query"]
         user_id = cb["from"]["id"]
@@ -119,7 +111,8 @@ async def telegram_webhook(request: Request):
 async def send_join_buttons(chat_id, unjoined_list):
     inline_keyboard = []
     for ch in unjoined_list:
-        url = f"https://t.me/{ch.replace('@', '')}"
+        clean_ch = ch.replace('@', '')
+        url = f"https://t.me/{clean_ch}"
         inline_keyboard.append([{"text": f"📢 Join {ch}", "url": url}])
     
     inline_keyboard.append([{"text": "✅ Check / Verify", "callback_data": "verify_membership"}])
