@@ -48,8 +48,9 @@ REQUIRED_CHANNELS = [
 # ============================================================
 
 REFERRAL_REWARD = 2.00
-DAILY_BONUS = 0.50
+DAILY_BONUS = 0.00
 MIN_WITHDRAWAL = 30.00
+SUPPORT_USERNAME = "@AmanM_12"
 
 DAILY_BONUS_COOLDOWN_HOURS = 24
 
@@ -58,7 +59,7 @@ MAX_PROOF_SIZE = 8 * 1024 * 1024
 
 app = FastAPI(
     title="Falcon World Mini App",
-    version="2.1.0",
+    version="2.2.0",
 )
 
 
@@ -764,8 +765,15 @@ async def register(
     if (
         start_param
         and start_param.isdigit()
-        and int(start_param) != user_id
     ):
+
+        # Self-referral is never allowed.
+        if int(start_param) == user_id:
+            return {
+                "success": True,
+                "user_id": user_id,
+                "referral_recorded": False,
+            }
 
         referrer_id = int(start_param)
 
@@ -834,6 +842,11 @@ async def register(
     return {
         "success": True,
         "user_id": user_id,
+        "referral_recorded": bool(
+            start_param
+            and start_param.isdigit()
+            and int(start_param) != user_id
+        ),
     }
 
 
@@ -1151,6 +1164,14 @@ async def verify(
 
     if all_joined:
 
+        # ----------------------------------------------------
+        # ATOMIC REFERRAL PAYOUT
+        # ----------------------------------------------------
+        # The database transaction is already locked with
+        # BEGIN IMMEDIATE below only for this request. We mark
+        # the referral as paid FIRST and only then credit the
+        # balance. This prevents two simultaneous Verify calls
+        # from paying the same referral twice.
         referral_row = conn.execute(
             """
             SELECT
@@ -1166,7 +1187,7 @@ async def verify(
 
         if (
             referral_row
-            and referral_row["status"] != "paid"
+            and referral_row["status"] == "pending"
         ):
 
             referrer_id = int(
@@ -1182,28 +1203,19 @@ async def verify(
                 (referrer_id,),
             ).fetchone()
 
-            if referrer_exists:
+            if referrer_exists and referrer_id != user_id:
 
-                # ALWAYS fixed 2 ETB.
                 reward = REFERRAL_REWARD
 
-                add_balance(
-                    conn,
-                    referrer_id,
-                    reward,
-                    "referral",
-                    "Successful referral reward",
-                    referral_row["id"],
-                )
-
-                conn.execute(
+                # Claim the referral payout atomically.
+                claimed = conn.execute(
                     """
                     UPDATE referrals
                     SET status='paid',
                         reward=?,
                         paid_at=?
                     WHERE id=?
-                    AND status!='paid'
+                    AND status='pending'
                     """,
                     (
                         reward,
@@ -1212,16 +1224,27 @@ async def verify(
                     ),
                 )
 
-                notify(
-                    conn,
-                    referrer_id,
-                    "🎉 Referral Reward",
-                    (
-                        f"You earned "
-                        f"{reward:.2f} ETB "
-                        f"from a successful referral."
-                    ),
-                )
+                if claimed.rowcount == 1:
+
+                    add_balance(
+                        conn,
+                        referrer_id,
+                        reward,
+                        "referral",
+                        "Successful referral reward",
+                        referral_row["id"],
+                    )
+
+                    notify(
+                        conn,
+                        referrer_id,
+                        "🎉 Referral Reward",
+                        (
+                            f"You earned "
+                            f"{reward:.2f} ETB "
+                            f"from a successful referral."
+                        ),
+                    )
 
     conn.commit()
     conn.close()
@@ -1401,36 +1424,32 @@ async def claim_daily_bonus(
             )
 
         # ----------------------------------------------------
-        # ADD 0.50 ETB
+        # ZERO-REWARD DAILY BONUS
         # ----------------------------------------------------
+        # The feature can still be claimed once every 24 hours,
+        # but the reward is intentionally 0 ETB and NOTHING is
+        # added to the user's balance or balance history.
 
-        new_balance = add_balance(
-            conn,
-            user_id,
-            DAILY_BONUS,
-            "daily_bonus",
-            "Daily Bonus",
-            None,
+        current_balance = float(
+            user_row["balance"]
         )
 
         notify(
             conn,
             user_id,
             "🎁 Daily Bonus",
-            (
-                f"{DAILY_BONUS:.2f} ETB "
-                "has been added to your balance."
-            ),
+            "Daily Bonus claimed. Reward: 0.00 ETB.",
         )
 
         conn.commit()
 
         return {
             "success": True,
-            "amount": DAILY_BONUS,
-            "balance": new_balance,
+            "amount": 0.00,
+            "balance": current_balance,
             "date": bonus_date,
             "cooldown_hours": 24,
+            "message": "Daily Bonus claimed. Reward is 0 ETB.",
         }
 
     except HTTPException:
@@ -1523,7 +1542,7 @@ async def daily_bonus_status(
                 )
 
     return {
-        "amount": DAILY_BONUS,
+        "amount": 0.00,
         "claimed": claimed,
         "next_claim_at": next_claim_at,
         "remaining_seconds": remaining_seconds,
