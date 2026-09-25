@@ -1,5 +1,5 @@
 fastapi
 uvicorn[standard]
+httpx
 pydantic
-python-telegram-bot
 python-multipart
