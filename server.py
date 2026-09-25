@@ -17,7 +17,15 @@ BOT_USERNAME = "FalconWorld_Bot"
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 DB_FILE = os.getenv("DB_FILE", "global_cash.db")
 ADMIN_IDS = {int(x.strip()) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip().isdigit()}
-REQUIRED_CHANNELS = [x.strip() for x in os.getenv("REQUIRED_CHANNELS", "").split(",") if x.strip()]
+DEFAULT_REQUIRED_CHANNELS = [
+    "@ethiocashflow",
+    "@Sheger_tech1",
+    "@EthioVortex1",
+    "@AmanIncomeLab",
+    "@OnlineIncomeHub07",
+    "@Paymentprooff2",
+]
+REQUIRED_CHANNELS = [x.strip() for x in os.getenv("REQUIRED_CHANNELS", "").split(",") if x.strip()] or DEFAULT_REQUIRED_CHANNELS
 REFERRAL_REWARD = 2.00
 DAILY_BONUS = 0.50
 MIN_WITHDRAWAL = 30.00
@@ -232,16 +240,17 @@ def ensure_user(conn, tg, referred_by=None):
             )
 
 
-def auth_user(init_data, conn):
+def auth_user(init_data, conn, start_param=None):
     user_id, tg, data = current_user(init_data)
-    start_param = data.get("start_param", "")
-    referred_by = int(start_param) if start_param.isdigit() and int(start_param) != user_id else None
+    start_param = start_param or data.get("start_param", "") or ""
+    referred_by = int(start_param) if str(start_param).isdigit() and int(start_param) != user_id else None
     ensure_user(conn, tg, referred_by)
     return user_id, tg
 
 
 class RegisterIn(BaseModel):
     init_data: str
+    start_param: Optional[str] = None
 
 class WalletIn(BaseModel):
     init_data: str
@@ -295,7 +304,7 @@ async def health():
 async def register(body: RegisterIn):
     conn = db()
     try:
-        user_id, tg = auth_user(body.init_data, conn)
+        user_id, tg = auth_user(body.init_data, conn, body.start_param)
         conn.commit()
         row = conn.execute("SELECT * FROM users WHERE user_id=?", (user_id,)).fetchone()
         return {"success": True, "user": dict(row)}
@@ -325,19 +334,31 @@ async def referral(x_telegram_init_data: str = Header(default="")):
     finally:
         conn.close()
 
+@app.get("/api/required-channels")
+async def required_channels():
+    channels = []
+    for ch in REQUIRED_CHANNELS:
+        username = ch.lstrip("@").strip()
+        channels.append({
+            "username": "@" + username,
+            "url": f"https://t.me/{username}"
+        })
+    return {"success": True, "channels": channels}
+
 @app.post("/api/verify")
 async def verify(body: VerifyIn):
     conn = db()
     try:
         user_id, tg = auth_user(body.init_data, conn)
+        conn.execute("BEGIN IMMEDIATE")
         missing = []
         for ch in REQUIRED_CHANNELS:
             if not await telegram_get_chat_member(user_id, ch):
-                missing.append(ch)
+                missing.append(ch.lstrip("@"))
         joined_all = not missing
         conn.execute("UPDATE users SET joined_all=?,updated_at=? WHERE user_id=?", (1 if joined_all else 0, iso(), user_id))
+        referral_paid = False
         if joined_all:
-            conn.execute("BEGIN IMMEDIATE")
             ref = conn.execute("SELECT * FROM referrals WHERE referred_id=? AND status='pending'", (user_id,)).fetchone()
             if ref:
                 changed = conn.execute("UPDATE referrals SET status='paid',paid_at=? WHERE referred_id=? AND status='pending'", (iso(), user_id)).rowcount
@@ -345,8 +366,12 @@ async def verify(body: VerifyIn):
                     add_balance(conn, ref["referrer_id"], REFERRAL_REWARD, "referral_reward", str(user_id))
                     conn.execute("UPDATE users SET referral_paid=1,updated_at=? WHERE user_id=?", (iso(), user_id))
                     notify(conn, ref["referrer_id"], "🎉 Referral Reward", f"You earned {REFERRAL_REWARD:.2f} ETB from a referral.")
+                    referral_paid = True
         conn.commit()
-        return {"success": True, "joined_all": joined_all, "missing": missing}
+        return {"success": True, "joined_all": joined_all, "missing": missing, "referral_paid": referral_paid, "reward": REFERRAL_REWARD}
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
