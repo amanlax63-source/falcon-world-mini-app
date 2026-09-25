@@ -486,8 +486,8 @@
             </button>
 
             <button class="menu-btn" data-page="supportPage">
-                <span class="menu-icon">🛠</span>
-                <span class="menu-title">Services</span>
+                <span class="menu-icon">🆘</span>
+                <span class="menu-title">Support</span>
             </button>
 
         </div>
@@ -557,7 +557,7 @@
             </div>
 
             <div class="bonus-amount">
-                0.50 ETB
+                0 ETB
             </div>
 
             <div id="bonusStatus" class="muted">
@@ -569,7 +569,7 @@
                 class="action-btn"
                 style="width:100%; margin-top:15px;"
             >
-                🎁 Claim 0.50 ETB
+                🎁 Claim 0 ETB
             </button>
 
         </div>
@@ -837,70 +837,42 @@
     </section>
 
 
-    <!-- SERVICES -->
+    <!-- SUPPORT -->
     <section id="supportPage" class="page">
 
         <div class="page-header">
             <button class="back-btn" data-back>‹</button>
-            <div class="page-title">Services</div>
+            <div class="page-title">Support</div>
         </div>
 
         <div class="card">
 
             <div class="card-title">
-                🛠 Falcon World Services
+                🆘 SUPPORT CENTER
             </div>
 
-            <div class="muted">
-                Choose the service you need.
+            <div class="muted" style="margin-bottom:14px;">
+                Need a service or assistance?<br>
+                Contact our support team for more information and available offers.
             </div>
 
-            <button class="service-btn" data-service="Business Inquiry">
-                💼 Business Inquiry
-            </button>
+            <div class="service-btn">📢 Telegram Channel Promotion</div>
+            <div class="service-btn">👥 Telegram Group Promotion</div>
+            <div class="service-btn">📱 Telegram Account Sale &amp; Purchase</div>
+            <div class="service-btn">📣 Telegram Channel Sale &amp; Purchase</div>
+            <div class="service-btn">📈 Social Media Advertising</div>
+            <div class="service-btn">💰 USDT Buy &amp; Sell</div>
+            <div class="service-btn">💻 DMR Services</div>
+            <div class="service-btn">🤝 Business Promotion &amp; Advertising</div>
+            <div class="service-btn">🛠 Technical Support</div>
+            <div class="service-btn">📋 Other Inquiries</div>
 
-            <button class="service-btn" data-service="Advertising">
-                📢 Advertising
-            </button>
-
-            <button class="service-btn" data-service="Promotion">
-                🚀 Promotion
-            </button>
-
-            <button class="service-btn" data-service="Channel Sale / Purchase">
-                📣 Channel Sale / Purchase
-            </button>
-
-            <button class="service-btn" data-service="Technical Support">
-                🔧 Technical Support
-            </button>
-
-            <button class="service-btn" data-service="UCD Team">
-                👥 UCD Team
-            </button>
-
-            <button class="service-btn" data-service="DMR">
-                🛡 DMR
-            </button>
-
-        </div>
-
-        <div class="card">
-
-            <div class="card-title">
-                Advertising & Promotion
-            </div>
-
-            <button class="service-btn" data-service="Telegram Channel Promotion">
-                📢 Telegram Channel Promotion
-            </button>
-
-            <button class="service-btn" data-service="Telegram Group Promotion">
-                👥 Telegram Group Promotion
-            </button>
-
-            <button class="service-btn" data-service="Social Media Advertising">
-                📱 Social Media Advertising
+            <button
+                id="contactSupportBtn"
+                class="action-btn"
+                style="width:100%; margin-top:14px;"
+            >
+                👤 Contact Support
             </button>
 
         </div>
@@ -1429,7 +1401,7 @@
             } else {
 
                 status.textContent =
-                    "🎁 Your 0.50 ETB bonus is ready!";
+                    "🎁 Your 0 ETB bonus is ready!";
 
                 status.className =
                     "success";
@@ -1438,7 +1410,7 @@
                     false;
 
                 button.textContent =
-                    "🎁 Claim 0.50 ETB";
+                    "🎁 Claim 0 ETB";
 
             }
 
@@ -1553,18 +1525,13 @@
                                 data.balance
                             );
 
-                    } else {
-
-                        appData.balance +=
-                            0.50;
-
                     }
 
 
                     updateBalanceUI();
 
                     showMessage(
-                        "🎉 0.50 ETB Daily Bonus added!"
+                        "🎁 Daily Bonus claimed. Reward: 0 ETB."
                     );
 
 
@@ -2371,43 +2338,29 @@
 
 
     /* ==============================
-       SERVICES
+       SUPPORT
     ============================== */
 
-    document
-        .querySelectorAll(
-            ".service-btn"
-        )
-        .forEach(function (button) {
+    const contactSupportBtn =
+        document.getElementById(
+            "contactSupportBtn"
+        );
 
-            button.addEventListener(
-                "click",
-                function () {
+    if (contactSupportBtn) {
 
-                    const service =
-                        button.getAttribute(
-                            "data-service"
-                        );
+        contactSupportBtn.addEventListener(
+            "click",
+            function () {
 
+                openTelegramUrl(
+                    "https://t.me/AmanM_12"
+                );
 
-                    const text =
-                        "Hello, I need help with: " +
-                        service;
+            }
+        );
 
+    }
 
-                    const url =
-                        "https://t.me/Aman_M12?text=" +
-                        encodeURIComponent(
-                            text
-                        );
-
-
-                    openTelegramUrl(url);
-
-                }
-            );
-
-        });
 
 
     /* ==============================
