@@ -12,52 +12,449 @@
 </head>
 <body>
 <div class="app">
-<section id="homePage" class="page active"><div class="header"><div class="logo">🦅</div><div class="brand">FALCON WORLD</div><div class="subtitle">Earn • Refer • Withdraw</div></div><div id="verifyNotice" class="notice">⚠️ Please complete verification to use all features.</div><div id="verificationCard" class="verify-card" style="display:none;"><div class="card-title">🔐 Required Channels</div><div class="muted">Join all required channels, then press Verify.</div><div id="requiredChannelsList"></div><button id="verifyBtn" class="action-btn" style="width:100%;margin-top:12px;">✅ Verify Membership</button><div id="verifyResult" class="verify-result"></div></div><div class="balance-card"><div class="balance-label">Your Balance</div><div class="balance"><span id="homeBalance">0.00</span> <span class="currency">ETB</span></div><div id="userInfo" class="user-box">Connecting...</div></div><div class="grid"><button class="menu-btn" data-page="balancePage"><span class="menu-icon">💰</span><span class="menu-title">Balance</span></button><button class="menu-btn" data-page="bonusPage"><span class="menu-icon">🎁</span><span class="menu-title">Daily Bonus</span></button><button class="menu-btn" data-page="referralPage"><span class="menu-icon">👥</span><span class="menu-title">Referral</span></button><button class="menu-btn" data-page="tasksPage"><span class="menu-icon">🎯</span><span class="menu-title">Tasks</span></button><button class="menu-btn" data-page="walletPage"><span class="menu-icon">👛</span><span class="menu-title">Wallet</span></button><button class="menu-btn" data-page="withdrawPage"><span class="menu-icon">💸</span><span class="menu-title">Withdraw</span></button><button class="menu-btn" data-page="supportPage"><span class="menu-icon">🆘</span><span class="menu-title">Support</span></button></div><div class="footer">Falcon World © 2026</div></section>
-<section id="balancePage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Balance</div></div><div class="card"><div class="card-title">Available Balance</div><div class="big-number"><span id="balanceAmount">0.00</span> ETB</div><div class="muted">Your current available balance.</div></div><div class="card"><div class="card-title">Successful Referrals</div><div class="big-number" id="balanceReferrals">0</div><div class="muted">Referral reward: 2 ETB each</div></div><div class="card"><div class="card-title">Minimum Withdrawal</div><div class="big-number">30 ETB</div></div></section>
-<section id="bonusPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Daily Bonus</div></div><div class="card bonus-card"><div class="card-title">🎁 Daily Bonus</div><div class="bonus-amount">0.50 ETB</div><div id="bonusStatus" class="muted">Checking...</div><button id="claimBonusBtn" class="action-btn" style="width:100%;margin-top:15px;">🎁 Claim 0.50 ETB</button></div></section>
-<section id="referralPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Referral</div></div><div class="card"><div class="card-title">Successful Referrals</div><div class="big-number" id="referralCount">0</div><div class="muted">Earn 2 ETB for every successful referral.</div></div><div class="card"><div class="card-title">Referral Reward</div><div class="big-number">2 ETB</div><div class="muted">Reward is credited after your referred user completes channel verification.</div></div><div class="card"><div class="card-title">Your Referral Link</div><div id="referralLink" class="ref-link">Loading...</div><div class="action-row"><button id="copyBtn" class="action-btn">📋 Copy</button><button id="shareBtn" class="action-btn secondary">📤 Share</button></div></div></section>
-<section id="tasksPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Tasks</div></div><div id="tasksContainer"><div class="card"><div class="empty">Loading tasks...</div></div></div></section>
-<section id="walletPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Wallet</div></div><div class="card"><div class="card-title">🏦 CBE</div><div id="cbeWallet"><div class="muted">Not added</div></div><input id="cbeInput" class="input" type="text" inputmode="numeric" maxlength="13" placeholder="Enter 13-digit CBE account"><button id="saveCbeBtn" class="action-btn" style="width:100%;margin-top:9px;">Save CBE</button></div><div class="card"><div class="card-title">📱 Telebirr</div><div id="telebirrWallet"><div class="muted">Not added</div></div><input id="telebirrInput" class="input" type="text" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit Telebirr number"><button id="saveTelebirrBtn" class="action-btn" style="width:100%;margin-top:9px;">Save Telebirr</button></div><div class="card"><div class="muted">You can save both CBE and Telebirr. If both are saved, you can choose which one to use when withdrawing.</div></div></section>
-<section id="withdrawPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Withdraw</div></div><div class="card"><div class="card-title">Available Balance</div><div class="big-number"><span id="withdrawBalance">0.00</span> ETB</div></div><div class="card"><div class="card-title">Withdrawal Rules</div><div class="muted">• Minimum withdrawal: 30 ETB<br>• CBE and Telebirr supported<br>• If only one wallet exists, it is selected automatically<br>• If both wallets exist, choose one<br>• Balance is deducted immediately<br>• Admin reviews the request</div></div><div class="card"><div class="card-title">Amount</div><input id="withdrawAmount" class="input" type="number" min="30" step="0.01" placeholder="Enter amount"><div id="withdrawWalletBox" style="margin-top:14px;"></div><button id="withdrawBtn" class="action-btn" style="width:100%;margin-top:13px;">💸 Request Withdrawal</button></div><div class="card"><div class="card-title">Withdrawal History</div><div id="withdrawHistory"><div class="empty">Loading...</div></div></div></section>
-<section id="supportPage" class="page"><div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Support</div></div><div class="card"><div class="card-title">🆘 SUPPORT CENTER</div><div class="muted" style="margin-bottom:14px;">Need a service or assistance?<br>Contact our support team for more information and available offers.</div><div class="service-btn">📢 Telegram Channel Promotion</div><div class="service-btn">👥 Telegram Group Promotion</div><div class="service-btn">📱 Telegram Account Sale &amp; Purchase</div><div class="service-btn">📣 Telegram Channel Sale &amp; Purchase</div><div class="service-btn">📈 Social Media Advertising</div><div class="service-btn">💰 USDT Buy &amp; Sell</div><div class="service-btn">💻 DMR Services</div><div class="service-btn">🤝 Business Promotion &amp; Advertising</div><div class="service-btn">🛠 Technical Support</div><div class="service-btn">📋 Other Inquiries</div><button id="contactSupportBtn" class="action-btn" style="width:100%;margin-top:14px;">👤 Contact Support</button></div></section>
-</div><div id="toast" class="toast"></div>
+<section id="homePage" class="page active">
+  <div class="header">
+    <div class="logo">🦅</div>
+    <div class="brand">FALCON WORLD</div>
+    <div class="subtitle">Earn • Refer • Withdraw</div>
+  </div>
+  <div id="verifyNotice" class="notice">⚠️ Please complete verification to use all features.</div>
+  <div id="verificationCard" class="verify-card" style="display:none;">
+    <div class="card-title">🔐 Required Channels</div>
+    <div class="muted">Join all required channels, then press Verify.</div>
+    <div id="requiredChannelsList"></div>
+    <button id="verifyBtn" class="action-btn" style="width:100%;margin-top:12px;">✅ Verify Membership</button>
+    <div id="verifyResult" class="verify-result"></div>
+  </div>
+  <div class="balance-card">
+    <div class="balance-label">Your Balance</div>
+    <div class="balance"><span id="homeBalance">0.00</span> <span class="currency">ETB</span></div>
+    <div id="userInfo" class="user-box">Connecting...</div>
+  </div>
+  <div class="grid">
+    <button class="menu-btn" data-page="balancePage"><span class="menu-icon">💰</span><span class="menu-title">Balance</span></button>
+    <button class="menu-btn" data-page="bonusPage"><span class="menu-icon">🎁</span><span class="menu-title">Daily Bonus</span></button>
+    <button class="menu-btn" data-page="referralPage"><span class="menu-icon">👥</span><span class="menu-title">Referral</span></button>
+    <button class="menu-btn" data-page="tasksPage"><span class="menu-icon">🎯</span><span class="menu-title">Tasks</span></button>
+    <button class="menu-btn" data-page="walletPage"><span class="menu-icon">👛</span><span class="menu-title">Wallet</span></button>
+    <button class="menu-btn" data-page="withdrawPage"><span class="menu-icon">💸</span><span class="menu-title">Withdraw</span></button>
+    <button class="menu-btn" data-page="supportPage"><span class="menu-icon">🆘</span><span class="menu-title">Support</span></button>
+  </div>
+  <div class="footer">Falcon World © 2026</div>
+</section>
+
+<section id="balancePage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Balance</div></div>
+  <div class="card"><div class="card-title">Available Balance</div><div class="big-number"><span id="balanceAmount">0.00</span> ETB</div><div class="muted">Your current available balance.</div></div>
+  <div class="card"><div class="card-title">Successful Referrals</div><div class="big-number" id="balanceReferrals">0</div><div class="muted">Referral reward credited upon verification.</div></div>
+  <div class="card"><div class="card-title">Minimum Withdrawal</div><div class="big-number"><span id="minWithdrawalLabel">30.00</span> ETB</div></div>
+</section>
+
+<section id="bonusPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Daily Bonus</div></div>
+  <div class="card bonus-card">
+    <div class="card-title">🎁 Daily Bonus</div>
+    <div class="bonus-amount"><span id="bonusDisplayAmount">0.50</span> ETB</div>
+    <div id="bonusStatus" class="muted">Checking...</div>
+    <button id="claimBonusBtn" class="action-btn" style="width:100%;margin-top:15px;">🎁 Claim Bonus</button>
+  </div>
+</section>
+
+<section id="referralPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Referral</div></div>
+  <div class="card"><div class="card-title">Successful Referrals</div><div class="big-number" id="referralCount">0</div><div class="muted">Earn rewards for every successful referral.</div></div>
+  <div class="card"><div class="card-title">Referral Reward</div><div class="big-number"><span id="referralRewardLabel">2.00</span> ETB</div><div class="muted">Reward is credited instantly after your referred user completes channel verification.</div></div>
+  <div class="card">
+    <div class="card-title">Your Referral Link</div>
+    <div id="referralLink" class="ref-link">Loading...</div>
+    <div class="action-row"><button id="copyBtn" class="action-btn">📋 Copy</button><button id="shareBtn" class="action-btn secondary">📤 Share</button></div>
+  </div>
+</section>
+
+<section id="tasksPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Tasks</div></div>
+  <div id="tasksContainer"><div class="card"><div class="empty">Loading tasks...</div></div></div>
+</section>
+
+<section id="walletPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Wallet</div></div>
+  <div class="card"><div class="card-title">🏦 CBE</div><div id="cbeWallet"><div class="muted">Not added</div></div><input id="cbeInput" class="input" type="text" inputmode="numeric" maxlength="13" placeholder="Enter 13-digit CBE account"><button id="saveCbeBtn" class="action-btn" style="width:100%;margin-top:9px;">Save CBE</button></div>
+  <div class="card"><div class="card-title">📱 Telebirr</div><div id="telebirrWallet"><div class="muted">Not added</div></div><input id="telebirrInput" class="input" type="text" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit Telebirr number"><button id="saveTelebirrBtn" class="action-btn" style="width:100%;margin-top:9px;">Save Telebirr</button></div>
+  <div class="card"><div class="muted">You can save both CBE and Telebirr. If both are saved, you can choose which one to use when withdrawing.</div></div>
+</section>
+
+<section id="withdrawPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Withdraw</div></div>
+  <div class="card"><div class="card-title">Available Balance</div><div class="big-number"><span id="withdrawBalance">0.00</span> ETB</div></div>
+  <div class="card">
+    <div class="card-title">Withdrawal Rules</div>
+    <div class="muted">
+      • Minimum withdrawal: <span id="rulesMinWithdraw">30.00</span> ETB<br>
+      • CBE and Telebirr supported<br>
+      • Balance is deducted immediately<br>
+      • Admin reviews and verifies referral history before payment
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Amount</div>
+    <input id="withdrawAmount" class="input" type="number" min="1" step="0.01" placeholder="Enter amount">
+    <div id="withdrawWalletBox" style="margin-top:14px;"></div>
+    <button id="withdrawBtn" class="action-btn" style="width:100%;margin-top:13px;">💸 Request Withdrawal</button>
+  </div>
+  <div class="card"><div class="card-title">Withdrawal History</div><div id="withdrawHistory"><div class="empty">Loading...</div></div></div>
+</section>
+
+<section id="supportPage" class="page">
+  <div class="page-header"><button class="back-btn" data-back>‹</button><div class="page-title">Support</div></div>
+  <div class="card">
+    <div class="card-title">🆘 SUPPORT CENTER</div>
+    <div class="muted" style="margin-bottom:14px;">Need assistance or want to promote your channel?<br>Contact our support team for available services.</div>
+    <div class="service-btn">📢 Telegram Channel Promotion</div>
+    <div class="service-btn">👥 Telegram Group Promotion</div>
+    <div class="service-btn">📱 Telegram Account Sale &amp; Purchase</div>
+    <div class="service-btn">📣 Telegram Channel Sale &amp; Purchase</div>
+    <div class="service-btn">📈 Social Media Advertising</div>
+    <div class="service-btn">💰 USDT Buy &amp; Sell</div>
+    <div class="service-btn">🛠 Technical Support</div>
+    <button id="contactSupportBtn" class="action-btn" style="width:100%;margin-top:14px;">👤 Contact Support</button>
+  </div>
+</section>
+</div>
+<div id="toast" class="toast"></div>
+
 <script>
 (function(){"use strict";
 const tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;if(tg){try{tg.ready();tg.expand()}catch(e){}}
-let appData={balance:0,referralCount:0,cbe:"",telebirr:"",joinedAll:false};
+let appData={balance:0,referralCount:0,cbe:"",telebirr:"",joinedAll:false,refReward:2.0,dailyBonus:0.5,minWithdraw:30.0};
 const pages=document.querySelectorAll(".page"),homeBalance=document.getElementById("homeBalance"),balanceAmount=document.getElementById("balanceAmount"),withdrawBalance=document.getElementById("withdrawBalance"),userInfo=document.getElementById("userInfo"),referralLink=document.getElementById("referralLink"),referralCount=document.getElementById("referralCount"),balanceReferrals=document.getElementById("balanceReferrals"),verifyNotice=document.getElementById("verifyNotice"),toast=document.getElementById("toast");
+
 function showMessage(m){toast.textContent=m;toast.style.display="block";setTimeout(()=>toast.style.display="none",2600)}
 function getTelegramUser(){try{return tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user?tg.initDataUnsafe.user:null}catch(e){return null}}
 const telegramUser=getTelegramUser();
-async function api(path,options={}){options={...options};const headers={...(options.headers||{})};const isForm=typeof FormData!=="undefined"&&options.body instanceof FormData;if(!isForm)headers["Content-Type"]="application/json";if(tg&&tg.initData){headers["X-Telegram-Init-Data"]=tg.initData;headers.Authorization="tma "+tg.initData;if(!isForm&&options.body&&typeof options.body==="string"){try{const parsed=JSON.parse(options.body);if(parsed&&typeof parsed==="object"&&!parsed.init_data){parsed.init_data=tg.initData;options.body=JSON.stringify(parsed)}}catch(e){}}}options.headers=headers;const r=await fetch(path,options);let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.detail||d.message||"Something went wrong.");return d}
-function setupUserDisplay(){if(!telegramUser){userInfo.textContent="Browser mode";referralLink.textContent="Open this app from Telegram.";return}const name=((telegramUser.first_name||"")+" "+(telegramUser.last_name||"")).trim();userInfo.textContent=name?"👤 "+name:"👤 Telegram User";referralLink.textContent="https://t.me/FalconWorld_Bot?start="+encodeURIComponent(telegramUser.id);if(tg&&tg.initData)userInfo.textContent+=" • Connected"}
-function updateBalanceUI(){const a=Number(appData.balance||0).toFixed(2);homeBalance.textContent=a;balanceAmount.textContent=a;withdrawBalance.textContent=a;referralCount.textContent=String(appData.referralCount||0);balanceReferrals.textContent=String(appData.referralCount||0);verifyNotice.style.display=appData.joinedAll===false?"block":"none"}
-async function loadUser(){if(!tg||!tg.initData){setupUserDisplay();return}try{const d=await api("/api/register",{method:"POST",body:JSON.stringify({init_data:tg.initData,start_param:(tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||""})});if(d.user){appData.balance=Number(d.user.balance||0);appData.joinedAll=Boolean(d.user.joined_all)}}catch(e){console.log("Register error:",e)}try{const d=await api("/api/me");if(d.user){appData.balance=Number(d.user.balance||0);appData.joinedAll=Boolean(d.user.joined_all);appData.cbe=d.user.cbe_number||"";appData.telebirr=d.user.telebirr_number||""}if(typeof d.successful_referrals!=="undefined")appData.referralCount=Number(d.successful_referrals||0)}catch(e){console.log("ME error:",e)}updateBalanceUI();renderWallets();renderWithdrawWallets();await loadRequiredChannels()}
-async function loadReferral(){try{const d=await api("/api/referral");if(typeof d.count!=="undefined")appData.referralCount=Number(d.count||0);if(d.referral_link)referralLink.textContent=d.referral_link;referralCount.textContent=String(appData.referralCount);balanceReferrals.textContent=String(appData.referralCount)}catch(e){console.log("Referral error:",e)}}
-function formatSeconds(s){s=Math.max(0,Number(s||0));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return h>0?h+"h "+m+"m":m>0?m+"m "+x+"s":x+"s"}
-async function loadRequiredChannels(){const card=document.getElementById("verificationCard"),list=document.getElementById("requiredChannelsList");if(!card||!list)return;if(!tg||!tg.initData){card.style.display="none";return}try{const d=await api("/api/required-channels");const channels=d.channels||[];if(!channels.length||appData.joinedAll){card.style.display="none";return}card.style.display="block";list.innerHTML=channels.map(ch=>'<div class="channel-item"><div class="channel-name">📢 '+escapeHtml(ch.username)+'</div><button class="channel-btn" data-channel-url="'+safeJs(ch.url)+'">Join</button></div>').join("");list.querySelectorAll("[data-channel-url]").forEach(b=>b.addEventListener("click",()=>openTelegramUrl(b.getAttribute("data-channel-url"))))}catch(e){card.style.display="block";list.innerHTML='<div class="verify-result warning">Unable to load required channels.</div>'}}
-async function verifyMembership(){const btn=document.getElementById("verifyBtn"),result=document.getElementById("verifyResult");if(!tg||!tg.initData){showMessage("Open Falcon World from Telegram.");return}btn.disabled=true;btn.textContent="Checking...";result.className="verify-result warning";result.textContent="Checking your channel membership...";try{const d=await api("/api/verify",{method:"POST",body:JSON.stringify({init_data:tg.initData})});appData.joinedAll=Boolean(d.joined_all);updateBalanceUI();if(d.joined_all){result.className="verify-result success";result.textContent=d.referral_paid?"✅ Verified. Referral reward was credited.":"✅ All channels verified successfully.";document.getElementById("verificationCard").style.display="none";await loadUser()}else{const missing=d.missing||[];result.className="verify-result warning";result.textContent="Still missing: "+missing.map(x=>"@"+x).join(", ")}}catch(e){result.className="verify-result error";result.textContent=e.message}btn.disabled=false;btn.textContent="✅ Verify Membership"}
-const verifyBtn=document.getElementById("verifyBtn");if(verifyBtn)verifyBtn.addEventListener("click",verifyMembership);
-async function loadBonusStatus(){const status=document.getElementById("bonusStatus"),button=document.getElementById("claimBonusBtn");try{const d=await api("/api/daily-bonus");if(d.available===false){status.textContent="⏳ Already claimed. Next bonus in "+formatSeconds(d.remaining_seconds||0);status.className="warning";button.disabled=true;button.textContent="⏳ Already Claimed"}else{status.textContent="🎁 Your 0.50 ETB bonus is ready!";status.className="success";button.disabled=false;button.textContent="🎁 Claim 0.50 ETB"}}catch(e){status.textContent=e.message;status.className="warning";button.disabled=false;button.textContent="🎁 Claim 0.50 ETB"}}
-document.getElementById("claimBonusBtn").addEventListener("click",async function(){const b=this;b.disabled=true;b.textContent="Processing...";try{const d=await api("/api/daily-bonus",{method:"POST"});if(typeof d.balance!=="undefined")appData.balance=Number(d.balance);updateBalanceUI();showMessage("🎁 Daily Bonus claimed. Reward: +0.50 ETB");await loadBonusStatus()}catch(e){showMessage(e.message);await loadBonusStatus()}});
+
+async function api(path,options={}){
+  options={...options};
+  const headers={...(options.headers||{})};
+  const isForm=typeof FormData!=="undefined"&&options.body instanceof FormData;
+  if(!isForm)headers["Content-Type"]="application/json";
+  if(tg&&tg.initData){
+    headers["X-Telegram-Init-Data"]=tg.initData;
+    headers.Authorization="tma "+tg.initData;
+    if(!isForm&&options.body&&typeof options.body==="string"){
+      try{
+        const parsed=JSON.parse(options.body);
+        if(parsed&&typeof parsed==="object"&&!parsed.init_data){
+          parsed.init_data=tg.initData;
+          options.body=JSON.stringify(parsed);
+        }
+      }catch(e){}
+    }
+  }
+  options.headers=headers;
+  const r=await fetch(path,options);
+  let d={};
+  try{d=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(d.detail||d.message||"Something went wrong.");
+  return d;
+}
+
+function setupUserDisplay(){
+  if(!telegramUser){userInfo.textContent="Browser mode";referralLink.textContent="Open this app from Telegram.";return}
+  const name=((telegramUser.first_name||"")+" "+(telegramUser.last_name||"")).trim();
+  userInfo.textContent=name?"👤 "+name:"👤 Telegram User";
+  referralLink.textContent="https://t.me/FalconWorld_Bot?start="+encodeURIComponent(telegramUser.id);
+  if(tg&&tg.initData)userInfo.textContent+=" • Connected";
+}
+
+function updateBalanceUI(){
+  const a=Number(appData.balance||0).toFixed(2);
+  homeBalance.textContent=a;
+  balanceAmount.textContent=a;
+  withdrawBalance.textContent=a;
+  referralCount.textContent=String(appData.referralCount||0);
+  balanceReferrals.textContent=String(appData.referralCount||0);
+  verifyNotice.style.display=appData.joinedAll===false?"block":"none";
+  
+  if(document.getElementById("minWithdrawalLabel")) document.getElementById("minWithdrawalLabel").textContent=Number(appData.minWithdraw||30).toFixed(2);
+  if(document.getElementById("rulesMinWithdraw")) document.getElementById("rulesMinWithdraw").textContent=Number(appData.minWithdraw||30).toFixed(2);
+  if(document.getElementById("referralRewardLabel")) document.getElementById("referralRewardLabel").textContent=Number(appData.refReward||2).toFixed(2);
+  if(document.getElementById("bonusDisplayAmount")) document.getElementById("bonusDisplayAmount").textContent=Number(appData.dailyBonus||0.5).toFixed(2);
+}
+
+async function loadUser(){
+  if(!tg||!tg.initData){setupUserDisplay();return}
+  try{
+    const d=await api("/api/register",{method:"POST",body:JSON.stringify({init_data:tg.initData,start_param:(tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||""})});
+    if(d.user){appData.balance=Number(d.user.balance||0);appData.joinedAll=Boolean(d.user.joined_all)}
+  }catch(e){console.log("Register error:",e)}
+  
+  try{
+    const d=await api("/api/me");
+    if(d.user){
+      appData.balance=Number(d.user.balance||0);
+      appData.joinedAll=Boolean(d.user.joined_all);
+      appData.cbe=d.user.cbe_number||"";
+      appData.telebirr=d.user.telebirr_number||"";
+    }
+    if(typeof d.successful_referrals!=="undefined")appData.referralCount=Number(d.successful_referrals||0);
+  }catch(e){console.log("ME error:",e)}
+  
+  updateBalanceUI();
+  renderWallets();
+  renderWithdrawWallets();
+  await loadRequiredChannels();
+}
+
+async function loadReferral(){
+  try{
+    const d=await api("/api/referral");
+    if(typeof d.count!=="undefined")appData.referralCount=Number(d.count||0);
+    if(typeof d.reward!=="undefined")appData.refReward=Number(d.reward||2);
+    if(d.link)referralLink.textContent=d.link;
+    updateBalanceUI();
+  }catch(e){console.log("Referral error:",e)}
+}
+
+function formatSeconds(s){
+  s=Math.max(0,Number(s||0));
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;
+  return h>0?h+"h "+m+"m":m>0?m+"m "+x+"s":x+"s";
+}
+
+async function loadRequiredChannels(){
+  const card=document.getElementById("verificationCard"),list=document.getElementById("requiredChannelsList");
+  if(!card||!list)return;
+  if(!tg||!tg.initData){card.style.display="none";return}
+  try{
+    const d=await api("/api/required-channels");
+    const channels=d.channels||[];
+    if(!channels.length||appData.joinedAll){card.style.display="none";return}
+    card.style.display="block";
+    list.innerHTML=channels.map(ch=>'<div class="channel-item"><div class="channel-name">📢 '+escapeHtml(ch.username)+'</div><button class="channel-btn" data-channel-url="'+safeJs(ch.url)+'">Join</button></div>').join("");
+    list.querySelectorAll("[data-channel-url]").forEach(b=>b.addEventListener("click",()=>openTelegramUrl(b.getAttribute("data-channel-url"))));
+  }catch(e){card.style.display="block";list.innerHTML='<div class="verify-result warning">Unable to load required channels.</div>'}
+}
+
+async function verifyMembership(){
+  const btn=document.getElementById("verifyBtn"),result=document.getElementById("verifyResult");
+  if(!tg||!tg.initData){showMessage("Open Falcon World from Telegram.");return}
+  btn.disabled=true;
+  btn.textContent="Checking...";
+  result.className="verify-result warning";
+  result.textContent="Checking your channel membership...";
+  try{
+    const d=await api("/api/verify",{method:"POST",body:JSON.stringify({init_data:tg.initData})});
+    appData.joinedAll=Boolean(d.joined_all);
+    updateBalanceUI();
+    if(d.joined_all){
+      result.className="verify-result success";
+      result.textContent="✅ All channels verified successfully.";
+      document.getElementById("verificationCard").style.display="none";
+      await loadUser();
+    }else{
+      const missing=d.missing||[];
+      result.className="verify-result warning";
+      result.textContent="Still missing: "+missing.map(x=>"@"+x).join(", ");
+    }
+  }catch(e){
+    result.className="verify-result error";
+    result.textContent=e.message;
+  }
+  btn.disabled=false;
+  btn.textContent="✅ Verify Membership";
+}
+
+const verifyBtn=document.getElementById("verifyBtn");
+if(verifyBtn)verifyBtn.addEventListener("click",verifyMembership);
+
+async function loadBonusStatus(){
+  const status=document.getElementById("bonusStatus"),button=document.getElementById("claimBonusBtn");
+  try{
+    const d=await api("/api/daily-bonus");
+    if(typeof d.amount!=="undefined")appData.dailyBonus=Number(d.amount);
+    updateBalanceUI();
+    if(d.available===false){
+      status.textContent="⏳ Already claimed. Next bonus in "+formatSeconds(d.remaining_seconds||0);
+      status.className="warning";
+      button.disabled=true;
+      button.textContent="⏳ Already Claimed";
+    }else{
+      status.textContent="🎁 Your "+Number(appData.dailyBonus).toFixed(2)+" ETB bonus is ready!";
+      status.className="success";
+      button.disabled=false;
+      button.textContent="🎁 Claim "+Number(appData.dailyBonus).toFixed(2)+" ETB";
+    }
+  }catch(e){
+    status.textContent=e.message;
+    status.className="warning";
+    button.disabled=false;
+    button.textContent="🎁 Claim Bonus";
+  }
+}
+
+document.getElementById("claimBonusBtn").addEventListener("click",async function(){
+  const b=this;b.disabled=true;b.textContent="Processing...";
+  try{
+    const d=await api("/api/daily-bonus",{method:"POST"});
+    if(typeof d.balance!=="undefined")appData.balance=Number(d.balance);
+    updateBalanceUI();
+    showMessage("🎁 Daily Bonus claimed! +"+Number(d.amount||appData.dailyBonus).toFixed(2)+" ETB");
+    await loadBonusStatus();
+  }catch(e){
+    showMessage(e.message);
+    await loadBonusStatus();
+  }
+});
+
 function escapeHtml(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 function safeJs(v){return String(v||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n").replace(/\r/g,"\\r")}
-function renderWallets(){const c=document.getElementById("cbeWallet"),t=document.getElementById("telebirrWallet");c.innerHTML=appData.cbe?'<div class="wallet-box"><div class="wallet-name">🏦 CBE</div><div class="wallet-number">'+escapeHtml(appData.cbe)+'</div><div class="status success">✓ Saved</div></div>':'<div class="muted">Not added</div>';t.innerHTML=appData.telebirr?'<div class="wallet-box"><div class="wallet-name">📱 Telebirr</div><div class="wallet-number">'+escapeHtml(appData.telebirr)+'</div><div class="status success">✓ Saved</div></div>':'<div class="muted">Not added</div>'}
-async function saveWallet(type,number){try{const d=await api("/api/wallet",{method:"POST",body:JSON.stringify({wallet_type:type,wallet_number:number})});if(type==="CBE")appData.cbe=number;if(type==="Telebirr")appData.telebirr=number;renderWallets();renderWithdrawWallets();showMessage(d.message||type+" wallet saved successfully.")}catch(e){showMessage(e.message)}}
-document.getElementById("saveCbeBtn").addEventListener("click",async()=>{const i=document.getElementById("cbeInput"),n=i.value.trim();if(!/^1000\d{9}$/.test(n)){showMessage("CBE must be 13 digits and start with 1000.");return}await saveWallet("CBE",n);i.value=""});
-document.getElementById("saveTelebirrBtn").addEventListener("click",async()=>{const i=document.getElementById("telebirrInput"),n=i.value.trim();if(!/^(09|07)\d{8}$/.test(n)){showMessage("Telebirr must be 10 digits and start with 09 or 07.");return}await saveWallet("Telebirr",n);i.value=""});
-function renderWithdrawWallets(){const b=document.getElementById("withdrawWalletBox");if(!appData.cbe&&!appData.telebirr){b.innerHTML='<div class="muted">No wallet saved. Please add a wallet first.</div>';return}if(appData.cbe&&appData.telebirr){b.innerHTML='<div class="muted">Choose withdrawal wallet:</div><label class="wallet-box"><input type="radio" name="withdrawWallet" value="CBE"> 🏦 CBE '+escapeHtml(appData.cbe)+'</label><label class="wallet-box"><input type="radio" name="withdrawWallet" value="Telebirr"> 📱 Telebirr '+escapeHtml(appData.telebirr)+'</label>';return}if(appData.cbe){b.innerHTML='<div class="wallet-box">🏦 CBE '+escapeHtml(appData.cbe)+'<input type="hidden" id="autoWithdrawWallet" value="CBE"></div>';return}b.innerHTML='<div class="wallet-box">📱 Telebirr '+escapeHtml(appData.telebirr)+'<input type="hidden" id="autoWithdrawWallet" value="Telebirr"></div>'}
-document.getElementById("withdrawBtn").addEventListener("click",async function(){const ai=document.getElementById("withdrawAmount"),amount=Number(ai.value);if(!Number.isFinite(amount)||amount<30){showMessage("Minimum withdrawal is 30 ETB.");return}let wt=document.querySelector('input[name="withdrawWallet"]:checked')?.value||document.getElementById("autoWithdrawWallet")?.value;if(!wt){showMessage("Please choose a wallet.");return}const btn=this;btn.disabled=true;btn.textContent="Processing...";try{const d=await api("/api/withdraw",{method:"POST",body:JSON.stringify({amount,wallet_type:wt})});appData.balance=Number(d.balance??(appData.balance-amount));updateBalanceUI();ai.value="";showMessage(d.message||"Withdrawal request submitted.");loadWithdrawHistory()}catch(e){showMessage(e.message)}btn.disabled=false;btn.textContent="💸 Request Withdrawal"});
-async function loadWithdrawHistory(){const c=document.getElementById("withdrawHistory");try{const d=await api("/api/withdrawals"),rows=d.withdrawals||d.items||[];if(!rows.length){c.innerHTML='<div class="empty">No withdrawal history yet.</div>';return}c.innerHTML=rows.map(x=>'<div class="task-card"><b>'+escapeHtml(x.wallet_type||"")+'</b><div class="task-reward">'+Number(x.amount||0).toFixed(2)+' ETB</div><div class="task-description">Status: '+escapeHtml(x.status||"")+'<br>Wallet: '+escapeHtml(x.wallet_number||"")+'<br>'+escapeHtml(x.created_at||"")+'</div></div>').join("")}catch(e){c.innerHTML='<div class="empty">'+escapeHtml(e.message)+'</div>'}}
-async function loadTasks(){const c=document.getElementById("tasksContainer");try{const d=await api("/api/tasks"),tasks=d.tasks||[];if(!tasks.length){c.innerHTML='<div class="card"><div class="empty">🚀 Coming Soon<br><br><span class="muted">New tasks will be available soon. Stay tuned!</span></div></div>';return}c.innerHTML=tasks.map(t=>'<div class="card task-card"><div class="task-title">'+escapeHtml(t.title||"Task")+'</div><div class="task-reward">+'+Number(t.reward||0).toFixed(2)+' ETB</div><div class="task-description">'+escapeHtml(t.description||"")+'</div>'+(t.channel_url?'<button class="action-btn" style="width:100%;margin-top:12px;" onclick="openTelegramUrl(\''+safeJs(t.channel_url)+'\')">📲 Open Task</button>':'')+(t.status==="available"?'<button class="action-btn secondary task-proof-btn" data-task-id="'+Number(t.id)+'" style="width:100%;margin-top:8px;">📤 Submit Proof</button>':'<div class="status warning" style="margin-top:10px;">'+escapeHtml(t.status||"Completed")+'</div>')+'</div>').join("");document.querySelectorAll(".task-proof-btn").forEach(b=>b.addEventListener("click",()=>submitTaskProof(b.dataset.taskId)))}catch(e){c.innerHTML='<div class="card"><div class="empty">'+escapeHtml(e.message)+'</div></div>'}}
-async function submitTaskProof(id){const proof=prompt("Paste proof text or screenshot description:");if(!proof)return;try{const d=await api("/api/tasks/"+id+"/submit",{method:"POST",body:(()=>{const f=new FormData();f.append("init_data",tg?tg.initData:"");f.append("proof_text",proof);return f})()});showMessage(d.message||"Proof submitted for review.");loadTasks()}catch(e){showMessage(e.message)}}
+
+function renderWallets(){
+  const c=document.getElementById("cbeWallet"),t=document.getElementById("telebirrWallet");
+  c.innerHTML=appData.cbe?'<div class="wallet-box"><div class="wallet-name">🏦 CBE</div><div class="wallet-number">'+escapeHtml(appData.cbe)+'</div><div class="status success">✓ Saved</div></div>':'<div class="muted">Not added</div>';
+  t.innerHTML=appData.telebirr?'<div class="wallet-box"><div class="wallet-name">📱 Telebirr</div><div class="wallet-number">'+escapeHtml(appData.telebirr)+'</div><div class="status success">✓ Saved</div></div>':'<div class="muted">Not added</div>';
+}
+
+async function saveWallet(type,number){
+  try{
+    const body={init_data:tg?tg.initData:""};
+    if(type==="CBE") body.cbe_number=number;
+    if(type==="Telebirr") body.telebirr_number=number;
+    const d=await api("/api/wallet",{method:"POST",body:JSON.stringify(body)});
+    if(type==="CBE")appData.cbe=number;
+    if(type==="Telebirr")appData.telebirr=number;
+    renderWallets();
+    renderWithdrawWallets();
+    showMessage(d.message||type+" wallet saved successfully.");
+  }catch(e){showMessage(e.message)}
+}
+
+document.getElementById("saveCbeBtn").addEventListener("click",async()=>{
+  const i=document.getElementById("cbeInput"),n=i.value.trim();
+  if(!/^1000\d{9}$/.test(n)){showMessage("CBE must be 13 digits and start with 1000.");return}
+  await saveWallet("CBE",n);i.value="";
+});
+
+document.getElementById("saveTelebirrBtn").addEventListener("click",async()=>{
+  const i=document.getElementById("telebirrInput"),n=i.value.trim();
+  if(!/^(09|07)\d{8}$/.test(n)){showMessage("Telebirr must be 10 digits and start with 09 or 07.");return}
+  await saveWallet("Telebirr",n);i.value="";
+});
+
+function renderWithdrawWallets(){
+  const b=document.getElementById("withdrawWalletBox");
+  if(!appData.cbe&&!appData.telebirr){b.innerHTML='<div class="muted">No wallet saved. Please add a wallet first.</div>';return}
+  if(appData.cbe&&appData.telebirr){
+    b.innerHTML='<div class="muted">Choose withdrawal wallet:</div><label class="wallet-box"><input type="radio" name="withdrawWallet" value="cbe" checked> 🏦 CBE '+escapeHtml(appData.cbe)+'</label><label class="wallet-box"><input type="radio" name="withdrawWallet" value="telebirr"> 📱 Telebirr '+escapeHtml(appData.telebirr)+'</label>';
+    return;
+  }
+  if(appData.cbe){
+    b.innerHTML='<div class="wallet-box">🏦 CBE '+escapeHtml(appData.cbe)+'<input type="hidden" id="autoWithdrawWallet" value="cbe"></div>';
+    return;
+  }
+  b.innerHTML='<div class="wallet-box">📱 Telebirr '+escapeHtml(appData.telebirr)+'<input type="hidden" id="autoWithdrawWallet" value="telebirr"></div>';
+}
+
+document.getElementById("withdrawBtn").addEventListener("click",async function(){
+  const ai=document.getElementById("withdrawAmount"),amount=Number(ai.value);
+  if(!Number.isFinite(amount)||amount < (appData.minWithdraw||30)){
+    showMessage("Minimum withdrawal is "+Number(appData.minWithdraw||30).toFixed(2)+" ETB.");
+    return;
+  }
+  let wt=document.querySelector('input[name="withdrawWallet"]:checked')?.value||document.getElementById("autoWithdrawWallet")?.value;
+  if(!wt){showMessage("Please choose a wallet.");return}
+  const btn=this;btn.disabled=true;btn.textContent="Processing...";
+  try{
+    const d=await api("/api/withdraw",{method:"POST",body:JSON.stringify({amount,wallet_type:wt})});
+    appData.balance=Number(d.balance??(appData.balance-amount));
+    updateBalanceUI();
+    ai.value="";
+    showMessage(d.message||"Withdrawal request submitted.");
+    loadWithdrawHistory();
+  }catch(e){showMessage(e.message)}
+  btn.disabled=false;btn.textContent="💸 Request Withdrawal";
+});
+
+async function loadWithdrawHistory(){
+  const c=document.getElementById("withdrawHistory");
+  try{
+    const d=await api("/api/withdrawals"),rows=d.withdrawals||d.items||[];
+    if(!rows.length){c.innerHTML='<div class="empty">No withdrawal history yet.</div>';return}
+    c.innerHTML=rows.map(x=>'<div class="task-card"><b>'+escapeHtml((x.wallet_type||"").toUpperCase())+'</b><div class="task-reward">'+Number(x.amount||0).toFixed(2)+' ETB</div><div class="task-description">Status: <b>'+escapeHtml(x.status||"")+'</b><br>Wallet: '+escapeHtml(x.wallet_number||"")+'<br>Date: '+escapeHtml(x.created_at||"")+'</div></div>').join("");
+  }catch(e){c.innerHTML='<div class="empty">'+escapeHtml(e.message)+'</div>'}
+}
+
+async function loadTasks(){
+  const c=document.getElementById("tasksContainer");
+  try{
+    const d=await api("/api/tasks"),tasks=d.items||d.tasks||[];
+    if(!tasks.length){
+      c.innerHTML='<div class="card"><div class="empty">🚀 No active tasks available right now.<br><br><span class="muted">Check back later for new promotional tasks!</span></div></div>';
+      return;
+    }
+    c.innerHTML=tasks.map(t=>'<div class="card task-card"><div class="task-title">'+escapeHtml(t.title||"Task")+'</div><div class="task-reward">+'+Number(t.reward||0).toFixed(2)+' ETB</div><div class="task-description">'+escapeHtml(t.description||"")+'</div>'+(t.channel_url?'<button class="action-btn" style="width:100%;margin-top:12px;" onclick="openTelegramUrl(\''+safeJs(t.channel_url)+'\')">📲 Open Task Link</button>':'')+(t.status==="available"?'<button class="action-btn secondary task-proof-btn" data-task-id="'+Number(t.id)+'" style="width:100%;margin-top:8px;">📤 Submit Proof</button>':'<div class="status warning" style="margin-top:10px;">Status: '+escapeHtml(t.status||"Completed")+'</div>')+'</div>').join("");
+    document.querySelectorAll(".task-proof-btn").forEach(b=>b.addEventListener("click",()=>submitTaskProof(b.dataset.taskId)));
+  }catch(e){c.innerHTML='<div class="card"><div class="empty">'+escapeHtml(e.message)+'</div></div>'}
+}
+
+async function submitTaskProof(id){
+  const proof=prompt("Paste proof text or screenshot details:");
+  if(!proof)return;
+  try{
+    const f=new FormData();
+    f.append("init_data",tg?tg.initData:"");
+    f.append("proof_text",proof);
+    const d=await api("/api/tasks/"+id+"/submit",{method:"POST",body:f});
+    showMessage(d.message||"Proof submitted for review.");
+    loadTasks();
+  }catch(e){showMessage(e.message)}
+}
+
 document.getElementById("contactSupportBtn").addEventListener("click",()=>openTelegramUrl("https://t.me/AmanM_12"));
-document.getElementById("copyBtn").addEventListener("click",async()=>{const x=referralLink.textContent;if(!x||x.startsWith("Open this")){showMessage("Open the app from Telegram first.");return}try{await navigator.clipboard.writeText(x);showMessage("Referral link copied!")}catch(e){showMessage("Copy failed.")}});
-document.getElementById("shareBtn").addEventListener("click",()=>{const x=referralLink.textContent;if(!x||x.startsWith("Open this")){showMessage("Open the app from Telegram first.");return}openTelegramUrl("https://t.me/share/url?url="+encodeURIComponent(x)+"&text="+encodeURIComponent("Join Falcon World and start earning!"))});
-function openPage(id){pages.forEach(p=>p.classList.remove("active"));const t=document.getElementById(id);if(!t)return;t.classList.add("active");if(tg){try{id==="homePage"?tg.BackButton.hide():tg.BackButton.show()}catch(e){}}if(id==="bonusPage")loadBonusStatus();if(id==="referralPage")loadReferral();if(id==="tasksPage")loadTasks();if(id==="walletPage")loadUser();if(id==="withdrawPage"){loadUser();loadWithdrawHistory()}}
-document.querySelectorAll(".menu-btn").forEach(b=>b.addEventListener("click",()=>openPage(b.dataset.page)));document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",()=>openPage("homePage")));if(tg)try{tg.BackButton.onClick(()=>openPage("homePage"))}catch(e){}
-window.openTelegramUrl=function(url){if(tg){try{tg.openTelegramLink(url);return}catch(e){}}window.open(url,"_blank")};
-function applyTelegramTheme(){if(!tg)return;try{const th=tg.themeParams||{};if(th.bg_color)document.body.style.background=th.bg_color;if(th.text_color)document.body.style.color=th.text_color}catch(e){}}
+
+document.getElementById("copyBtn").addEventListener("click",async()=>{
+  const x=referralLink.textContent;
+  if(!x||x.startsWith("Open this")){showMessage("Open the app from Telegram first.");return}
+  try{await navigator.clipboard.writeText(x);showMessage("Referral link copied!")}catch(e){showMessage("Copy failed.")}
+});
+
+document.getElementById("shareBtn").addEventListener("click",()=>{
+  const x=referralLink.textContent;
+  if(!x||x.startsWith("Open this")){showMessage("Open the app from Telegram first.");return}
+  openTelegramUrl("https://t.me/share/url?url="+encodeURIComponent(x)+"&text="+encodeURIComponent("Join Falcon World and start earning!"));
+});
+
+function openPage(id){
+  pages.forEach(p=>p.classList.remove("active"));
+  const t=document.getElementById(id);
+  if(!t)return;
+  t.classList.add("active");
+  if(tg){try{id==="homePage"?tg.BackButton.hide():tg.BackButton.show()}catch(e){}}
+  if(id==="bonusPage")loadBonusStatus();
+  if(id==="referralPage")loadReferral();
+  if(id==="tasksPage")loadTasks();
+  if(id==="walletPage")loadUser();
+  if(id==="withdrawPage"){loadUser();loadWithdrawHistory()}
+}
+
+document.querySelectorAll(".menu-btn").forEach(b=>b.addEventListener("click",()=>openPage(b.dataset.page)));
+document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",()=>openPage("homePage")));
+if(tg)try{tg.BackButton.onClick(()=>openPage("homePage"))}catch(e){}
+
+window.openTelegramUrl=function(url){
+  if(tg){try{tg.openTelegramLink(url);return}catch(e){}}
+  window.open(url,"_blank");
+};
+
+function applyTelegramTheme(){
+  if(!tg)return;
+  try{
+    const th=tg.themeParams||{};
+    if(th.bg_color)document.body.style.background=th.bg_color;
+    if(th.text_color)document.body.style.color=th.text_color;
+  }catch(e){}
+}
+
 setupUserDisplay();applyTelegramTheme();openPage("homePage");loadUser();
 })();
 </script>
